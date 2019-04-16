@@ -17,17 +17,17 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING
   6 .debug_info   000008a5  00000000  00000000  00000400  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_abbrev 000007c6  00000000  00000000  00000ca5  2**0
+  7 .debug_abbrev 000007bd  00000000  00000000  00000ca5  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_line   00000489  00000000  00000000  0000146b  2**0
+  8 .debug_line   00000489  00000000  00000000  00001462  2**0
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_frame  00000054  00000000  00000000  000018f4  2**2
+  9 .debug_frame  00000054  00000000  00000000  000018ec  2**2
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_str    00000425  00000000  00000000  00001948  2**0
+ 10 .debug_str    00000455  00000000  00000000  00001940  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_loc    00000076  00000000  00000000  00001d6d  2**0
+ 11 .debug_loc    00000076  00000000  00000000  00001d95  2**0
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_ranges 00000018  00000000  00000000  00001de3  2**0
+ 12 .debug_ranges 00000018  00000000  00000000  00001e0b  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -140,7 +140,7 @@ Disassembly of section .text:
   bc:	a1 cf       	rjmp	.-190    	; 0x0 <__vectors>
 
 000000be <Tick_Keypad>:
-enum State_Machine {one, two, three, four, five, six, seven, eight} Keypad;
+enum State_Machine {start, start_input, button_release, input_1, input_match, lock_start, lock_button_release, lock_match} Keypad;
 unsigned char temp_a;
 unsigned char temp_b;
 	
@@ -173,11 +173,11 @@ void Tick_Keypad()
   ee:	fc 01       	movw	r30, r24
   f0:	f5 c0       	rjmp	.+490    	; 0x2dc <__tablejump2__>
 	{
-		//case 1
-		case one:
+		//case 1 -- initialize case on startup
+		case start:
 			temp_b = 0x00;
   f2:	10 92 01 01 	sts	0x0101, r1	; 0x800101 <temp_b>
-			Keypad = two;
+			Keypad = start_input;
   f6:	81 e0       	ldi	r24, 0x01	; 1
   f8:	80 93 02 01 	sts	0x0102, r24	; 0x800102 <Keypad>
 		break; 
@@ -185,10 +185,10 @@ void Tick_Keypad()
 		
 		//case 2 -- only works if you are only pressing the # (A3) button
 		//multiple buttons being pressed at the same time will not work
-		case two:
+		case start_input:
 			temp_b = 0x00;
   fe:	10 92 01 01 	sts	0x0101, r1	; 0x800101 <temp_b>
-			Keypad = temp_a == 0x04 ? three:two;
+			Keypad = temp_a == 0x04 ? button_release:start_input;
  102:	80 91 00 01 	lds	r24, 0x0100	; 0x800100 <_edata>
  106:	84 30       	cpi	r24, 0x04	; 4
  108:	11 f4       	brne	.+4      	; 0x10e <Tick_Keypad+0x50>
@@ -201,10 +201,10 @@ void Tick_Keypad()
 		
 		//case 3 -- only works if you stop pressing # (A3) button along with
 		//all other buttons
-		case three:
+		case button_release:
 			temp_b = 0x00;
  116:	10 92 01 01 	sts	0x0101, r1	; 0x800101 <temp_b>
-			Keypad = temp_a == 0x00 ? four:three;
+			Keypad = temp_a == 0x00 ? input_1:button_release;
  11a:	80 91 00 01 	lds	r24, 0x0100	; 0x800100 <_edata>
  11e:	88 23       	and	r24, r24
  120:	11 f4       	brne	.+4      	; 0x126 <Tick_Keypad+0x68>
@@ -216,7 +216,7 @@ void Tick_Keypad()
  12c:	ac c0       	rjmp	.+344    	; 0x286 <Tick_Keypad+0x1c8>
 		
 		//case 4 -- resets if Y (A1) is not pressed
-		case four:
+		case input_1:
 			temp_b = 0x00;
  12e:	10 92 01 01 	sts	0x0101, r1	; 0x800101 <temp_b>
 			if(temp_a == 0x02)
@@ -224,42 +224,42 @@ void Tick_Keypad()
  136:	82 30       	cpi	r24, 0x02	; 2
  138:	21 f4       	brne	.+8      	; 0x142 <Tick_Keypad+0x84>
 			{
-				Keypad = five;
+				Keypad = input_match;
  13a:	84 e0       	ldi	r24, 0x04	; 4
  13c:	80 93 02 01 	sts	0x0102, r24	; 0x800102 <Keypad>
 			}
 			else
 			{
-				Keypad = two;
+				Keypad = start_input;
 			}
 		break;
  140:	a2 c0       	rjmp	.+324    	; 0x286 <Tick_Keypad+0x1c8>
 			temp_b = 0x00;
 			if(temp_a == 0x02)
 			{
-				Keypad = five;
+				Keypad = input_match;
 			}
 			else if(temp_a == 0X00)
  142:	80 91 00 01 	lds	r24, 0x0100	; 0x800100 <_edata>
  146:	88 23       	and	r24, r24
  148:	21 f4       	brne	.+8      	; 0x152 <Tick_Keypad+0x94>
 			{
-				Keypad = four;
+				Keypad = input_1;
  14a:	83 e0       	ldi	r24, 0x03	; 3
  14c:	80 93 02 01 	sts	0x0102, r24	; 0x800102 <Keypad>
 			}
 			else
 			{
-				Keypad = two;
+				Keypad = start_input;
 			}
 		break;
  150:	9a c0       	rjmp	.+308    	; 0x286 <Tick_Keypad+0x1c8>
 			{
-				Keypad = four;
+				Keypad = input_1;
 			}
 			else
 			{
-				Keypad = two;
+				Keypad = start_input;
  152:	81 e0       	ldi	r24, 0x01	; 1
  154:	80 93 02 01 	sts	0x0102, r24	; 0x800102 <Keypad>
 			}
@@ -268,18 +268,19 @@ void Tick_Keypad()
 		
 		//case 5 -- door unlocked
 		//door only locks if the lock button (A7) if pressed without other inputs
-		case five:
+		case input_match:
 			temp_b = 0x01;
  15a:	81 e0       	ldi	r24, 0x01	; 1
  15c:	80 93 01 01 	sts	0x0101, r24	; 0x800101 <temp_b>
-			Keypad = six;
+			Keypad = lock_start;
  160:	85 e0       	ldi	r24, 0x05	; 5
  162:	80 93 02 01 	sts	0x0102, r24	; 0x800102 <Keypad>
 		break;
  166:	8f c0       	rjmp	.+286    	; 0x286 <Tick_Keypad+0x1c8>
 		
-		//case 6
-		case six:
+		//case 6 -- locking door from outside requires same input
+		//begins when # (A3) is pressed
+		case lock_start:
 			temp_b = 0x01;
  168:	81 e0       	ldi	r24, 0x01	; 1
  16a:	80 93 01 01 	sts	0x0101, r24	; 0x800101 <temp_b>
@@ -306,50 +307,50 @@ void Tick_Keypad()
  1a2:	87 37       	cpi	r24, 0x77	; 119
  1a4:	21 f4       	brne	.+8      	; 0x1ae <Tick_Keypad+0xf0>
 			{
-				Keypad = two;
+				Keypad = start_input;
  1a6:	81 e0       	ldi	r24, 0x01	; 1
  1a8:	80 93 02 01 	sts	0x0102, r24	; 0x800102 <Keypad>
 			}
 			else
 			{
-				Keypad = six;
+				Keypad = lock_start;
 			}
 		break;
  1ac:	6c c0       	rjmp	.+216    	; 0x286 <Tick_Keypad+0x1c8>
 			temp_b = 0x01;
 			if(temp_a == 0x70 || temp_a == 0x71 || temp_a == 0x72 || temp_a == 0x73 || temp_a == 0x75 || temp_a == 0x76 || temp_a == 0x77)
 			{
-				Keypad = two;
+				Keypad = start_input;
 			}
 			else if(temp_a == 0x04)
  1ae:	80 91 00 01 	lds	r24, 0x0100	; 0x800100 <_edata>
  1b2:	84 30       	cpi	r24, 0x04	; 4
  1b4:	21 f4       	brne	.+8      	; 0x1be <Tick_Keypad+0x100>
 			{
-				Keypad = seven;
+				Keypad = lock_button_release;
  1b6:	86 e0       	ldi	r24, 0x06	; 6
  1b8:	80 93 02 01 	sts	0x0102, r24	; 0x800102 <Keypad>
 			}
 			else
 			{
-				Keypad = six;
+				Keypad = lock_start;
 			}
 		break;
  1bc:	64 c0       	rjmp	.+200    	; 0x286 <Tick_Keypad+0x1c8>
 			{
-				Keypad = seven;
+				Keypad = lock_button_release;
 			}
 			else
 			{
-				Keypad = six;
+				Keypad = lock_start;
  1be:	85 e0       	ldi	r24, 0x05	; 5
  1c0:	80 93 02 01 	sts	0x0102, r24	; 0x800102 <Keypad>
 			}
 		break;
  1c4:	60 c0       	rjmp	.+192    	; 0x286 <Tick_Keypad+0x1c8>
 		
-		//case 7
-		case seven:
+		//case 7 -- button release for "#" key on keypad
+		case lock_button_release:
 			temp_b = 0x01;
  1c6:	81 e0       	ldi	r24, 0x01	; 1
  1c8:	80 93 01 01 	sts	0x0101, r24	; 0x800101 <temp_b>
@@ -376,50 +377,50 @@ void Tick_Keypad()
  200:	87 37       	cpi	r24, 0x77	; 119
  202:	21 f4       	brne	.+8      	; 0x20c <Tick_Keypad+0x14e>
 			{
-				Keypad = two;
+				Keypad = start_input;
  204:	81 e0       	ldi	r24, 0x01	; 1
  206:	80 93 02 01 	sts	0x0102, r24	; 0x800102 <Keypad>
 			}
 			else
 			{
-				Keypad = seven;
+				Keypad = lock_button_release;
 			}
 		break;
  20a:	3d c0       	rjmp	.+122    	; 0x286 <Tick_Keypad+0x1c8>
 			temp_b = 0x01;
 			if(temp_a == 0x70 || temp_a == 0x71 || temp_a == 0x72 || temp_a == 0x73 || temp_a == 0x75 || temp_a == 0x76 || temp_a == 0x77)
 			{
-				Keypad = two;
+				Keypad = start_input;
 			}
 			else if(temp_a == 0x00)
  20c:	80 91 00 01 	lds	r24, 0x0100	; 0x800100 <_edata>
  210:	88 23       	and	r24, r24
  212:	21 f4       	brne	.+8      	; 0x21c <Tick_Keypad+0x15e>
 			{
-				Keypad = eight;
+				Keypad = lock_match;
  214:	87 e0       	ldi	r24, 0x07	; 7
  216:	80 93 02 01 	sts	0x0102, r24	; 0x800102 <Keypad>
 			}
 			else
 			{
-				Keypad = seven;
+				Keypad = lock_button_release;
 			}
 		break;
  21a:	35 c0       	rjmp	.+106    	; 0x286 <Tick_Keypad+0x1c8>
 			{
-				Keypad = eight;
+				Keypad = lock_match;
 			}
 			else
 			{
-				Keypad = seven;
+				Keypad = lock_button_release;
  21c:	86 e0       	ldi	r24, 0x06	; 6
  21e:	80 93 02 01 	sts	0x0102, r24	; 0x800102 <Keypad>
 			}
 		break;
  222:	31 c0       	rjmp	.+98     	; 0x286 <Tick_Keypad+0x1c8>
 		
-		//case 8
-		case eight:
+		//case 8 -- checking if lock input matches password
+		case lock_match:
 			temp_b = 0x01;
  224:	81 e0       	ldi	r24, 0x01	; 1
  226:	80 93 01 01 	sts	0x0101, r24	; 0x800101 <temp_b>
@@ -446,41 +447,41 @@ void Tick_Keypad()
  25e:	87 37       	cpi	r24, 0x77	; 119
  260:	21 f4       	brne	.+8      	; 0x26a <Tick_Keypad+0x1ac>
 			{
-				Keypad = two;
+				Keypad = start_input;
  262:	81 e0       	ldi	r24, 0x01	; 1
  264:	80 93 02 01 	sts	0x0102, r24	; 0x800102 <Keypad>
 			}
 			else
 			{
-				Keypad = eight;
+				Keypad = lock_match;
 			}
 		break;
  268:	0e c0       	rjmp	.+28     	; 0x286 <Tick_Keypad+0x1c8>
 			temp_b = 0x01;
 			if(temp_a == 0x70 || temp_a == 0x71 || temp_a == 0x72 || temp_a == 0x73 || temp_a == 0x75 || temp_a == 0x76 || temp_a == 0x77)
 			{
-				Keypad = two;
+				Keypad = start_input;
 			}
 			else if(temp_a == 0x02)
  26a:	80 91 00 01 	lds	r24, 0x0100	; 0x800100 <_edata>
  26e:	82 30       	cpi	r24, 0x02	; 2
  270:	19 f4       	brne	.+6      	; 0x278 <Tick_Keypad+0x1ba>
 			{
-				Keypad = one;
+				Keypad = start;
  272:	10 92 02 01 	sts	0x0102, r1	; 0x800102 <Keypad>
 			}
 			else
 			{
-				Keypad = eight;
+				Keypad = lock_match;
 			}
 		break;
  276:	07 c0       	rjmp	.+14     	; 0x286 <Tick_Keypad+0x1c8>
 			{
-				Keypad = one;
+				Keypad = start;
 			}
 			else
 			{
-				Keypad = eight;
+				Keypad = lock_match;
  278:	87 e0       	ldi	r24, 0x07	; 7
  27a:	80 93 02 01 	sts	0x0102, r24	; 0x800102 <Keypad>
 			}
@@ -488,7 +489,7 @@ void Tick_Keypad()
  27e:	03 c0       	rjmp	.+6      	; 0x286 <Tick_Keypad+0x1c8>
 		
 		default:
-			Keypad = one;
+			Keypad = start;
  280:	10 92 02 01 	sts	0x0102, r1	; 0x800102 <Keypad>
 			break;
  284:	00 00       	nop
@@ -527,12 +528,12 @@ int main(void)
  2b4:	90 e0       	ldi	r25, 0x00	; 0
  2b6:	fc 01       	movw	r30, r24
  2b8:	10 82       	st	Z, r1
-	Keypad = one;
+	Keypad = start;
  2ba:	10 92 02 01 	sts	0x0102, r1	; 0x800102 <Keypad>
 	
     while (1) 
     {
-		temp_a = PINA & 0x87; 
+		temp_a = PINA & 0x87; //allows for A7, A2, A1, and A0 to be inputs
  2be:	80 e2       	ldi	r24, 0x20	; 32
  2c0:	90 e0       	ldi	r25, 0x00	; 0
  2c2:	fc 01       	movw	r30, r24
