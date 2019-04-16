@@ -430,10 +430,10 @@ END GROUP
  .debug_info    0x00000000      0x792 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega1284/avr51/crtatmega1284.o
  .debug_info    0x00000792      0x113 main.o
 
-.debug_abbrev   0x00000000      0x7c6
+.debug_abbrev   0x00000000      0x7bd
  *(.debug_abbrev)
  .debug_abbrev  0x00000000      0x729 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega1284/avr51/crtatmega1284.o
- .debug_abbrev  0x00000729       0x9d main.o
+ .debug_abbrev  0x00000729       0x94 main.o
 
 .debug_line     0x00000000      0x489
  *(.debug_line .debug_line.* .debug_line_end)
@@ -444,11 +444,11 @@ END GROUP
  *(.debug_frame)
  .debug_frame   0x00000000       0x54 main.o
 
-.debug_str      0x00000000      0x425
+.debug_str      0x00000000      0x455
  *(.debug_str)
  .debug_str     0x00000000      0x296 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega1284/avr51/crtatmega1284.o
- .debug_str     0x00000296      0x18f main.o
-                                0x1ca (size before relaxing)
+ .debug_str     0x00000296      0x1bf main.o
+                                0x20f (size before relaxing)
 
 .debug_loc      0x00000000       0x76
  *(.debug_loc)
