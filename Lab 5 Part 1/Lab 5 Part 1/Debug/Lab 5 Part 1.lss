@@ -1,0 +1,333 @@
+
+Lab 5 Part 1.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .data         00000000  00800100  00800100  0000021a  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  1 .text         000001c6  00000000  00000000  00000054  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  2 .comment      00000030  00000000  00000000  0000021a  2**0
+                  CONTENTS, READONLY
+  3 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  0000024c  2**2
+                  CONTENTS, READONLY
+  4 .debug_aranges 00000030  00000000  00000000  0000028c  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  5 .debug_info   00000937  00000000  00000000  000002bc  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  6 .debug_abbrev 000007a3  00000000  00000000  00000bf3  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_line   0000035e  00000000  00000000  00001396  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  8 .debug_frame  00000074  00000000  00000000  000016f4  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  9 .debug_str    00000461  00000000  00000000  00001768  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 10 .debug_loc    000000d7  00000000  00000000  00001bc9  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 11 .debug_ranges 00000020  00000000  00000000  00001ca0  2**0
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	45 c0       	rjmp	.+138    	; 0x8c <__ctors_end>
+   2:	00 00       	nop
+   4:	4b c0       	rjmp	.+150    	; 0x9c <__bad_interrupt>
+   6:	00 00       	nop
+   8:	49 c0       	rjmp	.+146    	; 0x9c <__bad_interrupt>
+   a:	00 00       	nop
+   c:	47 c0       	rjmp	.+142    	; 0x9c <__bad_interrupt>
+   e:	00 00       	nop
+  10:	45 c0       	rjmp	.+138    	; 0x9c <__bad_interrupt>
+  12:	00 00       	nop
+  14:	43 c0       	rjmp	.+134    	; 0x9c <__bad_interrupt>
+  16:	00 00       	nop
+  18:	41 c0       	rjmp	.+130    	; 0x9c <__bad_interrupt>
+  1a:	00 00       	nop
+  1c:	3f c0       	rjmp	.+126    	; 0x9c <__bad_interrupt>
+  1e:	00 00       	nop
+  20:	3d c0       	rjmp	.+122    	; 0x9c <__bad_interrupt>
+  22:	00 00       	nop
+  24:	3b c0       	rjmp	.+118    	; 0x9c <__bad_interrupt>
+  26:	00 00       	nop
+  28:	39 c0       	rjmp	.+114    	; 0x9c <__bad_interrupt>
+  2a:	00 00       	nop
+  2c:	37 c0       	rjmp	.+110    	; 0x9c <__bad_interrupt>
+  2e:	00 00       	nop
+  30:	35 c0       	rjmp	.+106    	; 0x9c <__bad_interrupt>
+  32:	00 00       	nop
+  34:	33 c0       	rjmp	.+102    	; 0x9c <__bad_interrupt>
+  36:	00 00       	nop
+  38:	31 c0       	rjmp	.+98     	; 0x9c <__bad_interrupt>
+  3a:	00 00       	nop
+  3c:	2f c0       	rjmp	.+94     	; 0x9c <__bad_interrupt>
+  3e:	00 00       	nop
+  40:	2d c0       	rjmp	.+90     	; 0x9c <__bad_interrupt>
+  42:	00 00       	nop
+  44:	2b c0       	rjmp	.+86     	; 0x9c <__bad_interrupt>
+  46:	00 00       	nop
+  48:	29 c0       	rjmp	.+82     	; 0x9c <__bad_interrupt>
+  4a:	00 00       	nop
+  4c:	27 c0       	rjmp	.+78     	; 0x9c <__bad_interrupt>
+  4e:	00 00       	nop
+  50:	25 c0       	rjmp	.+74     	; 0x9c <__bad_interrupt>
+  52:	00 00       	nop
+  54:	23 c0       	rjmp	.+70     	; 0x9c <__bad_interrupt>
+  56:	00 00       	nop
+  58:	21 c0       	rjmp	.+66     	; 0x9c <__bad_interrupt>
+  5a:	00 00       	nop
+  5c:	1f c0       	rjmp	.+62     	; 0x9c <__bad_interrupt>
+  5e:	00 00       	nop
+  60:	1d c0       	rjmp	.+58     	; 0x9c <__bad_interrupt>
+  62:	00 00       	nop
+  64:	1b c0       	rjmp	.+54     	; 0x9c <__bad_interrupt>
+  66:	00 00       	nop
+  68:	19 c0       	rjmp	.+50     	; 0x9c <__bad_interrupt>
+  6a:	00 00       	nop
+  6c:	17 c0       	rjmp	.+46     	; 0x9c <__bad_interrupt>
+  6e:	00 00       	nop
+  70:	15 c0       	rjmp	.+42     	; 0x9c <__bad_interrupt>
+  72:	00 00       	nop
+  74:	13 c0       	rjmp	.+38     	; 0x9c <__bad_interrupt>
+  76:	00 00       	nop
+  78:	11 c0       	rjmp	.+34     	; 0x9c <__bad_interrupt>
+  7a:	00 00       	nop
+  7c:	0f c0       	rjmp	.+30     	; 0x9c <__bad_interrupt>
+  7e:	00 00       	nop
+  80:	0d c0       	rjmp	.+26     	; 0x9c <__bad_interrupt>
+  82:	00 00       	nop
+  84:	0b c0       	rjmp	.+22     	; 0x9c <__bad_interrupt>
+  86:	00 00       	nop
+  88:	09 c0       	rjmp	.+18     	; 0x9c <__bad_interrupt>
+	...
+
+0000008c <__ctors_end>:
+  8c:	11 24       	eor	r1, r1
+  8e:	1f be       	out	0x3f, r1	; 63
+  90:	cf ef       	ldi	r28, 0xFF	; 255
+  92:	d0 e4       	ldi	r29, 0x40	; 64
+  94:	de bf       	out	0x3e, r29	; 62
+  96:	cd bf       	out	0x3d, r28	; 61
+  98:	02 d0       	rcall	.+4      	; 0x9e <main>
+  9a:	93 c0       	rjmp	.+294    	; 0x1c2 <_exit>
+
+0000009c <__bad_interrupt>:
+  9c:	b1 cf       	rjmp	.-158    	; 0x0 <__vectors>
+
+0000009e <main>:
+unsigned char GetBit(unsigned char x, unsigned char k) {
+	return ((x & (0x01 << k)) != 0);
+}
+
+int main(void)
+{
+  9e:	cf 93       	push	r28
+  a0:	df 93       	push	r29
+  a2:	cd b7       	in	r28, 0x3d	; 61
+  a4:	de b7       	in	r29, 0x3e	; 62
+  a6:	2b 97       	sbiw	r28, 0x0b	; 11
+  a8:	0f b6       	in	r0, 0x3f	; 63
+  aa:	f8 94       	cli
+  ac:	de bf       	out	0x3e, r29	; 62
+  ae:	0f be       	out	0x3f, r0	; 63
+  b0:	cd bf       	out	0x3d, r28	; 61
+	DDRA = 0x00; PORTA = 0xFF; // Configure port A's 8 pins as inputs
+  b2:	81 e2       	ldi	r24, 0x21	; 33
+  b4:	90 e0       	ldi	r25, 0x00	; 0
+  b6:	fc 01       	movw	r30, r24
+  b8:	10 82       	st	Z, r1
+  ba:	82 e2       	ldi	r24, 0x22	; 34
+  bc:	90 e0       	ldi	r25, 0x00	; 0
+  be:	2f ef       	ldi	r18, 0xFF	; 255
+  c0:	fc 01       	movw	r30, r24
+  c2:	20 83       	st	Z, r18
+	DDRB = 0xFF; PORTB = 0x00; // Configure port C's 8 pins as outputs
+  c4:	84 e2       	ldi	r24, 0x24	; 36
+  c6:	90 e0       	ldi	r25, 0x00	; 0
+  c8:	2f ef       	ldi	r18, 0xFF	; 255
+  ca:	fc 01       	movw	r30, r24
+  cc:	20 83       	st	Z, r18
+  ce:	85 e2       	ldi	r24, 0x25	; 37
+  d0:	90 e0       	ldi	r25, 0x00	; 0
+  d2:	fc 01       	movw	r30, r24
+  d4:	10 82       	st	Z, r1
+	
+	const unsigned char full_tank = 0x0D;		//value for full tank
+  d6:	8d e0       	ldi	r24, 0x0D	; 13
+  d8:	8a 83       	std	Y+2, r24	; 0x02
+	const unsigned char almost_full = 0x0A;		//value for almost full
+  da:	8a e0       	ldi	r24, 0x0A	; 10
+  dc:	8b 83       	std	Y+3, r24	; 0x03
+	const unsigned char half_full = 0x07;		//value for half full tank
+  de:	87 e0       	ldi	r24, 0x07	; 7
+  e0:	8c 83       	std	Y+4, r24	; 0x04
+	const unsigned char almost_empty = 0x05;	//value for almost empty tank
+  e2:	85 e0       	ldi	r24, 0x05	; 5
+  e4:	8d 83       	std	Y+5, r24	; 0x05
+	const unsigned char empty_tank = 0x03;		//value for empty tank
+  e6:	83 e0       	ldi	r24, 0x03	; 3
+  e8:	8e 83       	std	Y+6, r24	; 0x06
+	
+	unsigned char fuel_level = 0x00; // intermediate variable used to hold fuel level from input sensors
+  ea:	1f 82       	std	Y+7, r1	; 0x07
+	unsigned char temp_total = 0x00; // intermediate variable to hold output
+  ec:	19 82       	std	Y+1, r1	; 0x01
+	//unsigned char fuel_light = 0x00; // intermediate variable to hold output for the fuel light
+	
+	unsigned char button_1 = 0x00;		//button for the first input
+  ee:	18 86       	std	Y+8, r1	; 0x08
+	unsigned char button_2 = 0x00;		//button for the second input
+  f0:	19 86       	std	Y+9, r1	; 0x09
+	unsigned char button_3 = 0x00;		//button for the third input
+  f2:	1a 86       	std	Y+10, r1	; 0x0a
+	unsigned char button_4 = 0x00;		//button for the fourth input
+  f4:	1b 86       	std	Y+11, r1	; 0x0b
+	while(1)
+	{
+		fuel_level = 0x00;
+  f6:	1f 82       	std	Y+7, r1	; 0x07
+		button_1 = PINA & 0x01;
+  f8:	80 e2       	ldi	r24, 0x20	; 32
+  fa:	90 e0       	ldi	r25, 0x00	; 0
+  fc:	fc 01       	movw	r30, r24
+  fe:	80 81       	ld	r24, Z
+ 100:	81 70       	andi	r24, 0x01	; 1
+ 102:	88 87       	std	Y+8, r24	; 0x08
+		button_2 = PINA & 0x02;
+ 104:	80 e2       	ldi	r24, 0x20	; 32
+ 106:	90 e0       	ldi	r25, 0x00	; 0
+ 108:	fc 01       	movw	r30, r24
+ 10a:	80 81       	ld	r24, Z
+ 10c:	82 70       	andi	r24, 0x02	; 2
+ 10e:	89 87       	std	Y+9, r24	; 0x09
+		button_3 = PINA & 0x04;
+ 110:	80 e2       	ldi	r24, 0x20	; 32
+ 112:	90 e0       	ldi	r25, 0x00	; 0
+ 114:	fc 01       	movw	r30, r24
+ 116:	80 81       	ld	r24, Z
+ 118:	84 70       	andi	r24, 0x04	; 4
+ 11a:	8a 87       	std	Y+10, r24	; 0x0a
+		button_4 = PINA & 0x08;
+ 11c:	80 e2       	ldi	r24, 0x20	; 32
+ 11e:	90 e0       	ldi	r25, 0x00	; 0
+ 120:	fc 01       	movw	r30, r24
+ 122:	80 81       	ld	r24, Z
+ 124:	88 70       	andi	r24, 0x08	; 8
+ 126:	8b 87       	std	Y+11, r24	; 0x0b
+		fuel_level += button_1;
+ 128:	9f 81       	ldd	r25, Y+7	; 0x07
+ 12a:	88 85       	ldd	r24, Y+8	; 0x08
+ 12c:	89 0f       	add	r24, r25
+ 12e:	8f 83       	std	Y+7, r24	; 0x07
+		fuel_level += button_2;
+ 130:	9f 81       	ldd	r25, Y+7	; 0x07
+ 132:	89 85       	ldd	r24, Y+9	; 0x09
+ 134:	89 0f       	add	r24, r25
+ 136:	8f 83       	std	Y+7, r24	; 0x07
+		fuel_level += button_3; 
+ 138:	9f 81       	ldd	r25, Y+7	; 0x07
+ 13a:	8a 85       	ldd	r24, Y+10	; 0x0a
+ 13c:	89 0f       	add	r24, r25
+ 13e:	8f 83       	std	Y+7, r24	; 0x07
+		fuel_level += button_4;
+ 140:	9f 81       	ldd	r25, Y+7	; 0x07
+ 142:	8b 85       	ldd	r24, Y+11	; 0x0b
+ 144:	89 0f       	add	r24, r25
+ 146:	8f 83       	std	Y+7, r24	; 0x07
+		
+		temp_total = 0x3F; //This corresponds to a full tank 0011 1111
+ 148:	8f e3       	ldi	r24, 0x3F	; 63
+ 14a:	89 83       	std	Y+1, r24	; 0x01
+		
+		if(fuel_level < full_tank && fuel_level > almost_full)
+ 14c:	9f 81       	ldd	r25, Y+7	; 0x07
+ 14e:	8a 81       	ldd	r24, Y+2	; 0x02
+ 150:	98 17       	cp	r25, r24
+ 152:	38 f4       	brcc	.+14     	; 0x162 <main+0xc4>
+ 154:	9f 81       	ldd	r25, Y+7	; 0x07
+ 156:	8b 81       	ldd	r24, Y+3	; 0x03
+ 158:	89 17       	cp	r24, r25
+ 15a:	18 f4       	brcc	.+6      	; 0x162 <main+0xc4>
+		{
+			temp_total = 0x3E;
+ 15c:	8e e3       	ldi	r24, 0x3E	; 62
+ 15e:	89 83       	std	Y+1, r24	; 0x01
+ 160:	2a c0       	rjmp	.+84     	; 0x1b6 <main+0x118>
+		}
+		else if(fuel_level < almost_full && fuel_level > half_full)
+ 162:	9f 81       	ldd	r25, Y+7	; 0x07
+ 164:	8b 81       	ldd	r24, Y+3	; 0x03
+ 166:	98 17       	cp	r25, r24
+ 168:	38 f4       	brcc	.+14     	; 0x178 <main+0xda>
+ 16a:	9f 81       	ldd	r25, Y+7	; 0x07
+ 16c:	8c 81       	ldd	r24, Y+4	; 0x04
+ 16e:	89 17       	cp	r24, r25
+ 170:	18 f4       	brcc	.+6      	; 0x178 <main+0xda>
+		{
+			temp_total = 0x3C;
+ 172:	8c e3       	ldi	r24, 0x3C	; 60
+ 174:	89 83       	std	Y+1, r24	; 0x01
+ 176:	1f c0       	rjmp	.+62     	; 0x1b6 <main+0x118>
+		}
+		else if(fuel_level < half_full && fuel_level > almost_empty)
+ 178:	9f 81       	ldd	r25, Y+7	; 0x07
+ 17a:	8c 81       	ldd	r24, Y+4	; 0x04
+ 17c:	98 17       	cp	r25, r24
+ 17e:	38 f4       	brcc	.+14     	; 0x18e <main+0xf0>
+ 180:	9f 81       	ldd	r25, Y+7	; 0x07
+ 182:	8d 81       	ldd	r24, Y+5	; 0x05
+ 184:	89 17       	cp	r24, r25
+ 186:	18 f4       	brcc	.+6      	; 0x18e <main+0xf0>
+		{
+			temp_total = 0x38;
+ 188:	88 e3       	ldi	r24, 0x38	; 56
+ 18a:	89 83       	std	Y+1, r24	; 0x01
+ 18c:	14 c0       	rjmp	.+40     	; 0x1b6 <main+0x118>
+		}
+		else if(fuel_level < almost_empty && fuel_level > empty_tank)
+ 18e:	9f 81       	ldd	r25, Y+7	; 0x07
+ 190:	8d 81       	ldd	r24, Y+5	; 0x05
+ 192:	98 17       	cp	r25, r24
+ 194:	38 f4       	brcc	.+14     	; 0x1a4 <main+0x106>
+ 196:	9f 81       	ldd	r25, Y+7	; 0x07
+ 198:	8e 81       	ldd	r24, Y+6	; 0x06
+ 19a:	89 17       	cp	r24, r25
+ 19c:	18 f4       	brcc	.+6      	; 0x1a4 <main+0x106>
+		{
+			temp_total = 0x70;
+ 19e:	80 e7       	ldi	r24, 0x70	; 112
+ 1a0:	89 83       	std	Y+1, r24	; 0x01
+ 1a2:	09 c0       	rjmp	.+18     	; 0x1b6 <main+0x118>
+		}
+		else if(fuel_level < empty_tank)
+ 1a4:	9f 81       	ldd	r25, Y+7	; 0x07
+ 1a6:	8e 81       	ldd	r24, Y+6	; 0x06
+ 1a8:	98 17       	cp	r25, r24
+ 1aa:	18 f4       	brcc	.+6      	; 0x1b2 <main+0x114>
+		{
+			temp_total = 0x60;
+ 1ac:	80 e6       	ldi	r24, 0x60	; 96
+ 1ae:	89 83       	std	Y+1, r24	; 0x01
+ 1b0:	02 c0       	rjmp	.+4      	; 0x1b6 <main+0x118>
+		}
+		else
+		{
+			temp_total = 0x3F;
+ 1b2:	8f e3       	ldi	r24, 0x3F	; 63
+ 1b4:	89 83       	std	Y+1, r24	; 0x01
+		}
+		PORTB = temp_total;
+ 1b6:	85 e2       	ldi	r24, 0x25	; 37
+ 1b8:	90 e0       	ldi	r25, 0x00	; 0
+ 1ba:	29 81       	ldd	r18, Y+1	; 0x01
+ 1bc:	fc 01       	movw	r30, r24
+ 1be:	20 83       	st	Z, r18
+	}
+ 1c0:	9a cf       	rjmp	.-204    	; 0xf6 <main+0x58>
+
+000001c2 <_exit>:
+ 1c2:	f8 94       	cli
+
+000001c4 <__stop_program>:
+ 1c4:	ff cf       	rjmp	.-2      	; 0x1c4 <__stop_program>
