@@ -1,10 +1,8 @@
 /*
- *
- *
  * Partner(s) Name & E-mail: Brain 
  * My Email: candr018@ucr.edu
  * Lab Section: 027
- * Assignment: Lab #4 Exercise #1
+ * Assignment: Lab #5 Exercise #2
  * 
  * I acknowledge all content contained herein, excluding given examples and temples code, is my original work
  */ 
