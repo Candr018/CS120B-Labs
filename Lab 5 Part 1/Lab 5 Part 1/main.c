@@ -39,10 +39,10 @@ int main(void)
 	while(1)
 	{
 		fuel_level = 0x00;
-		button_1 = PINA & 0x01;
-		button_2 = PINA & 0x02;
-		button_3 = PINA & 0x04;
-		button_4 = PINA & 0x08;
+		button_1 = ~PINA & 0x01;
+		button_2 = ~PINA & 0x02;
+		button_3 = ~PINA & 0x04;
+		button_4 = ~PINA & 0x08;
 		fuel_level += button_1;
 		fuel_level += button_2;
 		fuel_level += button_3; 
@@ -50,7 +50,7 @@ int main(void)
 		
 		temp_total = 0x3F; //This corresponds to a full tank 0011 1111
 		
-		if(fuel_level < full_tank && fuel_level > almost_full)
+		if(fuel_level < full_tank && fuel_level >= almost_full)
 		{
 			temp_total = 0x3E;
 		}
