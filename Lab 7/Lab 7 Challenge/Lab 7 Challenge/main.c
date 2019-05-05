@@ -1,3 +1,10 @@
+/*
+ * Lab 7 Challenge.c
+ *
+ * Created: 4/29/2019 6:29:19 PM
+ * Author : User
+ */ 
+
 /*	Partner 1 Name & E-mail: Chris
  *	Partner 2 Name & E-mail: X
  *	Lab Section: 027
@@ -72,140 +79,160 @@ void TimerSet(unsigned long M) {
 
 
 
-enum States{init, wait, inc, dec, zero} state;
-
-unsigned char button0;
-unsigned char button1;
-
-unsigned char tmpC;
+enum States {init, b0, b1, b2, stop, reset} state;
 
 
-void button_Tick(){
-	button0 = ~PINA & 0x01;
-	button1 = ~PINA & 0x02;
+unsigned char tempB;
+unsigned char if_press;
+unsigned char score;
+
+void tick() {
 	
-	switch(state){ // transitions
-		case init:
-			tmpC = 0x09;
-			state = wait;
-		case wait:
-			if(button0 && !button1){
-				state = inc;
-			}
-			else if(!button0 && button1){
-				state = dec;
-			}
-			else if(button0 && button1){
-				state = zero;
-			}
-			else
-				state = wait;
-			break;
-		case inc:
-			if(button0 && !button1){
-				state = inc; 
-			}
-			else if(button0 && button1){
-				state = zero;
-			}
-			else
-				state = wait;
-			break;
-		case dec:
-			if(!button0 && button1){
-				state = dec;
-			}
-			else if(button0 && button1){
-				state = zero;
-			}
-			else
-				state = wait;
-			
-			break;
-		case zero:
-			if(button0 && button1){
-				state = zero;
-			}
-			else
-				state = wait;
-			break;
+	unsigned char button = ~PINA & 0x01;
 	
+	switch (state) { //transitions
+		case (init):
+		tempB = 0x00;
+		if_press = 0x00;
+		state = b0;
+		break;
+		
+		case b0:
+		state = button ? stop:b1;
+		break;
+		
+		case b1:
+		state = button ? stop:b2;
+		break;
+		
+		case b2:
+		state = button ? stop:b0;
+		break;
+		
+		case stop:
+		state = button ? stop:reset;
+		
+		if(if_press == 0x00)
+		{	
+			if(tempB == 0x02)
+			{
+				score++;
+			}
+			else if(tempB == 0x04 || tempB == 0x01)
+			{
+				score--;
+			}
+			else
+			{
+				score = score;
+			}
+		}
+		else
+		{
+			score = score;
+		}
+		if_press = 0x01;
+		break;
+		
+		case reset:
+		state = button ? init:reset;
+		break;
+		
+		default:
+		state = init;
 	}
-	switch(state){ // action
-		case wait:
-			break;
-		case inc:
-			if(tmpC < 0x09)
-				tmpC = tmpC + 1;
-			break;
-		case dec:
-			if(tmpC > 0x00)
-				tmpC = tmpC - 1;
-			break;
-		case zero:
-			tmpC = 0;
-			break;
 	
+	switch (state) { //action
+		case init:
+		break;
+		
+		case b0:
+		tempB = 0x01;
+		break;
+		
+		case b1:
+		tempB = 0x02;
+		break;
+		
+		case b2:
+		tempB = 0x04;
+		break;
+		
+		case stop:
+		break;
+		
+		case reset:
+		break;
+		
+		default:
+		break;
+		
 	}
 }
 
 int main(void)
 {
 
-	DDRA = 0x00; PORTA = 0xFF;
+	DDRA = 0xFE; PORTA = 0x01;
+	DDRB = 0xFF; PORTB = 0x00;
 	DDRC = 0xFF; PORTC = 0x00; 
 	DDRD = 0xFF; PORTD = 0x00;
-
-	TimerSet(1000);
+	
+	score = 0x05;
+	if_press = 0x00;
+	TimerSet(300);
 	TimerOn();
 	
 	LCD_init();	
 	LCD_ClearScreen();
 	
 	state = init;
-	tmpC = 0x09;
 	while(1){
 		LCD_Cursor(1);
-		button_Tick();
-		if (tmpC == 0x00)
+		PORTB = tempB;
+		if(score > 0 && score < 0x09)
 		{
-		LCD_WriteData(0 + '0');
+			tick();
+			if (score == 0x01)
+			{
+				LCD_WriteData(1 + '0');
+			}
+			else if (score == 0x02)
+			{
+				LCD_WriteData(2 + '0');
+			}
+			else if (score == 0x03)
+			{
+				LCD_WriteData(3 + '0');
+			}
+			else if (score == 0x04)
+			{
+				LCD_WriteData(4 + '0');
+			}
+			else if (score == 0x05)
+			{
+				LCD_WriteData(5 + '0');
+			}
+			else if (score == 0x06)
+			{
+				LCD_WriteData(6 + '0');
+			}
+			else if (score == 0x07)
+			{
+				LCD_WriteData(7 + '0');
+			}
+			else
+			{
+				LCD_WriteData(8 + '0');
+			}
 		}
-		else if (tmpC == 0x01)
+		else if(score == 0)
 		{
-			LCD_WriteData(1 + '0');
-		}
-		else if (tmpC == 0x02)
-		{
-			LCD_WriteData(2 + '0');
-		}
-		else if (tmpC == 0x03)
-		{
-			LCD_WriteData(3 + '0');
-		}
-		else if (tmpC == 0x04)
-		{
-			LCD_WriteData(4 + '0');
-		}
-		else if (tmpC == 0x05)
-		{
-			LCD_WriteData(5 + '0');
-		}
-		else if (tmpC == 0x06)
-		{
-			LCD_WriteData(6 + '0');
-		}
-		else if (tmpC == 0x07)
-		{
-			LCD_WriteData(7 + '0');
-		}
-		else if (tmpC == 0x08)
-		{
-			LCD_WriteData(8 + '0');
+			LCD_DisplayString(1, "GAME OVER!");
 		}
 		else
 		{
-			LCD_WriteData(9 + '0');
+			LCD_DisplayString(1, "VICTORY!");
 		}
 		while(!TimerFlag){}
 		TimerFlag = 0;
