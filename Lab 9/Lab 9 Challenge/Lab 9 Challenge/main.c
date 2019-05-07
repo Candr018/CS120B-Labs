@@ -29,6 +29,8 @@ volatile unsigned char TimerFlag = 0; // TimerISR() sets this to 1. C programmer
 
 unsigned char counter = 0; // counter to keep bpm
 
+unsigned char counter_measure = 0;
+
 unsigned char cur_state = 0x00; // keeps track of the current state to control next state
 
 unsigned char button_pressed = 0x00; //boolean to keep track of the button press to make sure it resets
@@ -286,45 +288,45 @@ void tick() {
 		// Space state to provide natural flow to music //
 		
 		case space_state:
-		if(counter > 10)
-		{
-		if(cur_state == 0x01) // Conditionals to manage current state and next state
+		if(counter_measure > 5)
 			{
-				next_state = measure_2;
+				if(cur_state == 0x01) // Conditionals to manage current state and next state
+					{
+						next_state = measure_2;
+					}
+				else if(cur_state == 0x02)
+					{
+						next_state = measure_3;
+					}
+				else if(cur_state == 0x03)
+					{
+						next_state = measure_4;
+					}
+				else if(cur_state == 0x04)
+					{
+						next_state = measure_5;
+					}
+				else if(cur_state == 0x05)
+					{
+						next_state = measure_6;
+					}
+				else if(cur_state == 0x06)
+					{
+						next_state = measure_7;
+					}
+				else if(cur_state == 0x07)
+					{
+						next_state = measure_8;
+					}
+				else if(cur_state == 0x08 && button_pressed == 0x01)
+					{
+						next_state = wait_release;
+					}
+				else
+					{
+						next_state = init;
+					}
 			}
-		else if(cur_state == 0x02)
-			{
-				next_state = measure_3;
-			}
-		else if(cur_state == 0x03)
-			{
-				next_state = measure_4;
-			}
-		else if(cur_state == 0x04)
-			{
-				next_state = measure_5;
-			}
-		else if(cur_state == 0x05)
-			{
-				next_state = measure_6;
-			}
-		else if(cur_state == 0x06)
-			{
-				next_state = measure_7;
-			}
-		else if(cur_state == 0x07)
-			{
-				next_state = measure_8;
-			}
-		else if(cur_state == 0x08 && button_pressed == 0x01)
-			{
-				next_state = wait_release;
-			}
-		else
-			{
-				next_state = init;
-			}
-		}
 		else
 		{
 			next_state = space_state;
@@ -355,11 +357,13 @@ void tick() {
 		break;
 		
 		case wait_start:
+		counter_measure = 0x00;
 		input_frequency = 0;
 		cur_state = 0x00;
 		break;
 		
 		case measure_1:
+		counter_measure = 0x00;
 		input_frequency = G4;
 		if(button == 0x00)
 		{
@@ -374,6 +378,7 @@ void tick() {
 		break;
 		
 		case measure_2:
+		counter_measure = 0x00;
 		input_frequency = G4;
 		if(button == 0x00)
 		{
@@ -388,6 +393,7 @@ void tick() {
 		break;
 		
 		case measure_3:
+		counter_measure = 0x00;
 		input_frequency = G4;
 		if(button == 0x00)
 		{
@@ -402,6 +408,7 @@ void tick() {
 		break;
 		
 		case measure_4:
+		counter_measure = 0x00;
 		input_frequency = F4;
 		if(button == 0x00)
 		{
@@ -416,6 +423,7 @@ void tick() {
 		break;
 		
 		case measure_5:
+		counter_measure = 0x00;
 		input_frequency = G4;
 		if(button == 0x00)
 		{
@@ -430,6 +438,7 @@ void tick() {
 		break;
 		
 		case measure_6:
+		counter_measure = 0x00;
 		input_frequency = G4;
 		if(button == 0x00)
 		{
@@ -444,6 +453,7 @@ void tick() {
 		break;
 		
 		case measure_7:
+		counter_measure = 0x00;
 		input_frequency = G4;
 		if(button == 0x00)
 		{
@@ -458,6 +468,7 @@ void tick() {
 		break;
 		
 		case measure_8:
+		counter_measure = 0x00;
 		input_frequency = E4;
 		if(button == 0x00)
 		{
@@ -472,14 +483,8 @@ void tick() {
 		break;
 		
 		case space_state:
-		if(counter > 10)
-		{
 			counter = 0x00;
-		}
-		else
-		{
-			counter++;
-		}
+			counter_measure++;
 		if(button == 0x00)
 		{
 			button_pressed = 0x00;
