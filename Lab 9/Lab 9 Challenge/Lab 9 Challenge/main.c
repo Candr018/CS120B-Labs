@@ -152,11 +152,11 @@ void tick() {
 		//----------------- Measure 1 state ----------------------//
 		
 		case measure_1:
-		if(counter < 10)	// first note for 50 ms
+		if(counter <12)	// first note for 50 ms
 			{
 				next_state = measure_1;
 			}
-		else if(!(counter < 10))  // space state to provide natural progression
+		else if(!(counter < 12))  // space state to provide natural progression
 			{
 				next_state = space_state;
 			}
@@ -169,11 +169,11 @@ void tick() {
 		//----------------- Measure 2 state ----------------------//
 		
 		case measure_2:
-		if(counter < 10)	// second note for 50 ms
+		if(counter <12)	// second note for 50 ms
 		{
 			next_state = measure_2;
 		}
-		else if(!(counter < 10)) // space state to provide a natural progression
+		else if(!(counter < 12)) // space state to provide a natural progression
 		{
 			next_state = space_state;
 		}
@@ -186,11 +186,11 @@ void tick() {
 		//----------------- Measure 3 state ----------------------//
 		
 		case measure_3: 
-		if(counter < 10)	// second note for 50 ms
+		if(counter <12)	// second note for 50 ms
 		{
 			next_state = measure_3;
 		}
-		else if(!(counter < 10)) // space state to provide a natural progression
+		else if(!(counter < 12)) // space state to provide a natural progression
 		{
 			next_state = space_state;
 		}
@@ -203,11 +203,11 @@ void tick() {
 		//----------------- Measure 4 state ----------------------//
 		
 		case measure_4:
-		if(counter < 80)	// second note for 50 ms
+		if(counter < 90)	// second note for 50 ms
 		{
 			next_state = measure_4;
 		}
-		else if(!(counter < 80)) // space state to provide a natural progression
+		else if(!(counter < 90)) // space state to provide a natural progression
 		{
 			next_state = space_state;
 		}
@@ -220,11 +220,11 @@ void tick() {
 		//----------------- Measure 5 state ----------------------//
 		
 		case measure_5:
-		if(counter < 10)	// second note for 50 ms
+		if(counter < 12)	// second note for 50 ms
 		{
 			next_state = measure_5;
 		}
-		else if(!(counter < 10)) // space state to provide a natural progression
+		else if(!(counter < 12)) // space state to provide a natural progression
 		{
 			next_state = space_state;
 		}
@@ -237,11 +237,11 @@ void tick() {
 		//----------------- Measure 6 state ----------------------//
 		
 		case measure_6:
-		if(counter < 10)	// second note for 50 ms
+		if(counter < 12)	// second note for 50 ms
 		{
 			next_state = measure_6;
 		}
-		else if(!(counter < 10)) // space state to provide a natural progression
+		else if(!(counter < 12)) // space state to provide a natural progression
 		{
 			next_state = space_state;
 		}
@@ -254,11 +254,11 @@ void tick() {
 		//----------------- Measure 7 state ----------------------//
 		
 		case measure_7:
-		if(counter < 10)	// second note for 50 ms
+		if(counter < 12)	// second note for 50 ms
 		{
 			next_state = measure_7;
 		}
-		else if(!(counter < 10)) // space state to provide a natural progression
+		else if(!(counter < 12)) // space state to provide a natural progression
 		{
 			next_state = space_state;
 		}
@@ -271,11 +271,11 @@ void tick() {
 		//----------------- Measure 8 state ----------------------//
 		
 		case measure_8:
-		if(counter < 80)	// second note for 50 ms
+		if(counter < 82)	// second note for 50 ms
 		{
 			next_state = measure_8;
 		}
-		else if(!(counter < 80)) // space state to provide a natural progression
+		else if(!(counter < 82)) // space state to provide a natural progression
 		{
 			next_state = space_state;
 		}
@@ -288,8 +288,7 @@ void tick() {
 		// Space state to provide natural flow to music //
 		
 		case space_state:
-		if(counter_measure > 5)
-			{
+		
 				if(cur_state == 0x01) // Conditionals to manage current state and next state
 					{
 						next_state = measure_2;
@@ -326,11 +325,7 @@ void tick() {
 					{
 						next_state = init;
 					}
-			}
-		else
-		{
-			next_state = space_state;
-		}
+			
 		break; 
 		
 		// ------ wait release state to ensure button is released ---- //
@@ -364,7 +359,14 @@ void tick() {
 		
 		case measure_1:
 		counter_measure = 0x00;
-		input_frequency = G4;
+		if(counter < 10)
+			{
+				input_frequency = G4;
+			}
+		else
+		{
+			input_frequency = 0;
+		}
 		if(button == 0x00)
 		{
 			button_pressed = 0x00;
@@ -379,7 +381,14 @@ void tick() {
 		
 		case measure_2:
 		counter_measure = 0x00;
-		input_frequency = G4;
+		if(counter < 10)
+		{
+			input_frequency = G4;
+		}
+		else
+		{
+			input_frequency = 0;
+		}
 		if(button == 0x00)
 		{
 			button_pressed = 0x00;
@@ -394,7 +403,14 @@ void tick() {
 		
 		case measure_3:
 		counter_measure = 0x00;
-		input_frequency = G4;
+		if(counter < 10)
+		{
+			input_frequency = G4;
+		}
+		else
+		{
+			input_frequency = 0;
+		}
 		if(button == 0x00)
 		{
 			button_pressed = 0x00;
@@ -409,7 +425,14 @@ void tick() {
 		
 		case measure_4:
 		counter_measure = 0x00;
-		input_frequency = F4;
+		if(counter < 80)
+		{
+			input_frequency = F4;
+		}
+		else
+		{
+			input_frequency = 0;
+		}
 		if(button == 0x00)
 		{
 			button_pressed = 0x00;
@@ -424,7 +447,14 @@ void tick() {
 		
 		case measure_5:
 		counter_measure = 0x00;
-		input_frequency = G4;
+		if(counter < 10)
+		{
+			input_frequency = G4;
+		}
+		else
+		{
+			input_frequency = 0;
+		}
 		if(button == 0x00)
 		{
 			button_pressed = 0x00;
@@ -439,7 +469,14 @@ void tick() {
 		
 		case measure_6:
 		counter_measure = 0x00;
-		input_frequency = G4;
+		if(counter < 10)
+		{
+			input_frequency = G4;
+		}
+		else
+		{
+			input_frequency = 0;
+		}
 		if(button == 0x00)
 		{
 			button_pressed = 0x00;
@@ -454,7 +491,14 @@ void tick() {
 		
 		case measure_7:
 		counter_measure = 0x00;
-		input_frequency = G4;
+		if(counter < 10)
+		{
+			input_frequency = G4;
+		}
+		else
+		{
+			input_frequency = 0;
+		}
 		if(button == 0x00)
 		{
 			button_pressed = 0x00;
@@ -469,7 +513,14 @@ void tick() {
 		
 		case measure_8:
 		counter_measure = 0x00;
-		input_frequency = E4;
+		if(counter < 80)
+		{
+			input_frequency = E4;
+		}
+		else
+		{
+			input_frequency = 0;
+		}
 		if(button == 0x00)
 		{
 			button_pressed = 0x00;
@@ -484,7 +535,6 @@ void tick() {
 		
 		case space_state:
 			counter = 0x00;
-			counter_measure++;
 		if(button == 0x00)
 		{
 			button_pressed = 0x00;
@@ -518,7 +568,7 @@ int main(void)
 	DDRB = 0xFF; PORTB = 0x00; // using B3 (0x08) as output to speaker
 	
 	PWM_on();
-	TimerSet(15);
+	TimerSet(18);
 	TimerOn(); 
 	
 	next_state = init;
