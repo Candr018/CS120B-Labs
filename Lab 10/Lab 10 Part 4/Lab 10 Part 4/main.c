@@ -115,6 +115,7 @@ unsigned char TtempB = 0x00;
 unsigned char TtempA = 0x00;
 unsigned char Oscillator = 0x00;
 double input_frequency;
+double frequency;
 unsigned char button;
 unsigned char increment;
 unsigned char decrement;
@@ -199,7 +200,7 @@ void BLED_tick(){
 	PORTB = TtempB;
 }
 
- enum SPEK_States {sinit, Wait_toggle, A_toggled} SPEK_state;
+ enum SPEK_States {sinit, Wait_toggle_2, A_toggled_2} SPEK_state;
 	 
  void SPEK_tick()
  
@@ -207,28 +208,28 @@ void BLED_tick(){
 		 switch (SPEK_state) // Speaker State Machines Transitions 
 		 {
 			 case sinit:
-				SPEK_state = Wait_toggle;
+				SPEK_state = Wait_toggle_2;
 			 break;
 			 
-			 case Wait_toggle:
-				if(TtempA = 0x04)
+			 case Wait_toggle_2:
+				if(TtempA == 0x04)
 					{
-						SPEK_state = A_toggled;
+						SPEK_state = A_toggled_2;
 					}
 				else
 					{
-						SPEK_state = Wait_toggle;
+						SPEK_state = Wait_toggle_2;
 					}
 			 break;
 			 
-			 case A_toggled:
-				if(TtempA = 0x04)
+			 case A_toggled_2:
+				if(TtempA == 0x04)
 					{
-						SPEK_state = A_toggled;
+						SPEK_state = A_toggled_2;
 					}
 				else
 					{
-						SPEK_state = Wait_toggle;
+						SPEK_state = Wait_toggle_2;
 					}
 			 break;
 			 
@@ -241,27 +242,105 @@ void BLED_tick(){
 		 {
 			 case sinit:
 				Oscillator = 1;
-				input_frequency = 0
+				input_frequency = 0;
+				frequency = C4;
 			 break;
 			 
-			 case Wait_toggle:
-				input_frequency = 0
+			 case Wait_toggle_2:
+				input_frequency = 0;
 			 break;
 			 
-			 case A_toggled:
+			 case A_toggled_2:
 				if(Oscillator)
 				{
-					input_frequency = C4;
+					input_frequency = frequency;
 				}
 				else if(!Oscillator)
 				{
 					input_frequency = 0;
 				}
+				else
+				{
+					input_frequency = 0;
+				}
+				
+				if(button == 0)
+					{
+						if(increment == 1)
+							{
+								if(input_frequency == C4)
+									{
+										frequency = D4;
+									}
+								else if(input_frequency == D4)
+									{
+										frequency = E4;
+									}
+								else if(input_frequency == E4)
+									{
+										frequency = F4;
+									}
+								else if(input_frequency == E4)
+									{
+										frequency = G4;
+									}
+								else if(input_frequency == G4)
+									{
+										frequency = A4;
+									}
+								else if(input_frequency == B4)
+									{
+										 frequency = C5;
+									}
+								else
+									{
+										frequency = frequency;
+									}
+								increment = 0;					 
+							}
+						else if(decrement == 1)
+							{
+								if(input_frequency == C5)
+									{
+										frequency = B4;
+									}
+								else if(input_frequency == B4)
+									{
+										frequency = A4;
+									}
+								else if(input_frequency == A4)
+									{
+										frequency = G4;
+									}
+								else if(input_frequency == G4)
+									{
+										frequency = F4;
+									}
+								else if(input_frequency == E4)
+									{
+										frequency = D4;
+									}
+								else if(input_frequency == D4)
+									{
+										frequency = C4;
+									}
+								else
+									{
+										frequency = frequency;
+									}
+							}
+						else
+							{
+								frequency = frequency;
+							}
+						decrement = 0;
+									
+					}
 				Oscillator = !Oscillator;
 			 break;
 			 
 			 default:
-				input_frequency = 0
+				input_frequency = 0;
 			 break;
 		 }
 		 
@@ -319,24 +398,17 @@ void INPUT_tick()
 			 button = ~PINA & 0x03;
 			 if(button == 0x01)
 			 {
-				 if(button == 0)
-				 {
 					 increment = 1;
-				 }
 
 			 }
 			 else if(button == 0x03)
 			 {
-				 if(button == 0)
-				 {
 					 decrement = 1;
-				 }
-
 			 }
 			 else
 			 {
-				 increment = 0;
-				 decrement = 0;
+				 increment = increment;
+				 decrement = decrement;
 			 }
 			 break;
 			 
@@ -347,7 +419,6 @@ void INPUT_tick()
 		 }
 	 }
 	
-}
 int main(void)
 {
 	DDRA = 0x00; PORTA = 0xFF;
@@ -359,8 +430,10 @@ int main(void)
 	BLED_state = binit;
 	SPEK_state = sinit;
 	TLED_state = init;
+	input_state = iinit;
     while (1) 
     {
+		button = ~PINA & 0x03;
 		if (TLED_time >= 300)
 		{
 			TLED_tick();
@@ -372,10 +445,13 @@ int main(void)
 		BLED_time = 0;
 		}
 		SPEK_tick();
-		while(!TimerFlag);
+		INPUT_tick();
+		
 		TimerFlag = 0;
 		TLED_time += 1;
 		BLED_time += 1;
+		set_PWM(input_frequency);
+		while(!TimerFlag);
 		
     }
 } 
