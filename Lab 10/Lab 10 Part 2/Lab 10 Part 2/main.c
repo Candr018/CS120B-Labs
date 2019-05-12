@@ -6,7 +6,6 @@
  */ 
 
 #include <avr/io.h>
-#include "io.c"
 #include <avr/interrupt.h>
 
 volatile unsigned char TimerFlag = 0; // TimerISR() sets this to 1. C programmer should clear to 0.

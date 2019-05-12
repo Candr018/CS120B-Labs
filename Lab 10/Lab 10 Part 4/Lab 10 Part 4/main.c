@@ -8,6 +8,8 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
+volatile unsigned char TimerFlag = 0; // TimerISR() sets this to 1. C programmer should clear to 0.
+
 // Internal variables for mapping AVR's ISR to our cleaner TimerISR model.
 unsigned long _avr_timer_M = 1; // Start count from here, down to 0. Default 1 ms.
 unsigned long _avr_timer_cntcurr = 0; // Current internal count of 1ms ticks
@@ -16,48 +18,10 @@ unsigned char SetBit(unsigned char x, unsigned char k, unsigned char b) {
 	return (b ? x | (0x01 << k) : x & ~(0x01 << k));
 }
 
-//----------------------------------------------------------- PWM STUFF --------------------------------------------------------------------------------//
-
-void set_PWM(double frequency) {
-	static double current_frequency; // Keeps track of the currently set frequency
-	// Will only update the registers when the frequency changes, otherwise allows
-	// music to play uninterrupted.
-	if (frequency != current_frequency) {
-		if (!frequency) { TCCR3B &= 0x08; } //stops timer/counter
-		else { TCCR3B |= 0x03; } // resumes/continues timer/counter
-		
-		// prevents OCR3A from overflowing, using prescaler 64
-		// 0.954 is smallest frequency that will not result in overflow
-		if (frequency < 0.954) { OCR3A = 0xFFFF; }
-		
-		// prevents OCR3A from underflowing, using prescaler 64					// 31250 is largest frequency that will not result in underflow
-		else if (frequency > 31250) { OCR3A = 0x0000; }
-		
-		// set OCR3A based on desired frequency
-		else { OCR3A = (short)(8000000 / (128 * frequency)) - 1; }
-
-		TCNT3 = 0; // resets counter
-		current_frequency = frequency; // Updates the current frequency
-	}
+unsigned char GetBit(unsigned char x, unsigned char k) {
+	return ((x & (0x01 << k)) != 0);
 }
 
-void PWM_on() {
-	TCCR3A = (1 << COM3A0);
-	// COM3A0: Toggle PB6 on compare match between counter and OCR3A
-	TCCR3B = (1 << WGM32) | (1 << CS31) | (1 << CS30);
-	// WGM32: When counter (TCNT3) matches OCR3A, reset counter
-	// CS31 & CS30: Set a prescaler of 64
-	set_PWM(0);
-}
-
-void PWM_off() {
-	TCCR3A = 0x00;
-	TCCR3B = 0x00;
-}
-
-//--------------------------------------------------- TIMER STUFF ----------------------------------------------------------------------//
-
-volatile unsigned char TimerFlag = 0; // TimerISR() sets this to 1. C programmer should clear to 0.
 
 void TimerOn() {
 	// AVR timer/counter controller register TCCR1
@@ -109,18 +73,62 @@ void TimerSet(unsigned long M) {
 	_avr_timer_cntcurr = _avr_timer_M;
 }
 
-//---------------------------------------------------------------------- GLOBAL VARS -----------------------------------------------//
+
+void set_PWM(double frequency) {
+	static double current_frequency; // Keeps track of the currently set frequency
+	// Will only update the registers when the frequency changes, otherwise allows
+	// music to play uninterrupted.
+	if (frequency != current_frequency) {
+		if (!frequency) { TCCR3B &= 0x08; } //stops timer/counter
+		else { TCCR3B |= 0x03; } // resumes/continues timer/counter
+		
+		// prevents OCR3A from overflowing, using prescaler 64
+		// 0.954 is smallest frequency that will not result in overflow
+		if (frequency < 0.954) { OCR3A = 0xFFFF; }
+		
+		// prevents OCR3A from underflowing, using prescaler 64					// 31250 is largest frequency that will not result in underflow
+		else if (frequency > 31250) { OCR3A = 0x0000; }
+		
+		// set OCR3A based on desired frequency
+		else { OCR3A = (short)(8000000 / (128 * frequency)) - 1; }
+
+		TCNT3 = 0; // resets counter
+		current_frequency = frequency; // Updates the current frequency
+	}
+}
+
+void PWM_on() {
+	TCCR3A = (1 << COM3A0);
+	// COM3A0: Toggle PB6 on compare match between counter and OCR3A
+	TCCR3B = (1 << WGM32) | (1 << CS31) | (1 << CS30);
+	// WGM32: When counter (TCNT3) matches OCR3A, reset counter
+	// CS31 & CS30: Set a prescaler of 64
+	set_PWM(0);
+}
+
+void PWM_off() {
+	TCCR3A = 0x00;
+	TCCR3B = 0x00;
+}
 
 unsigned char TtempB = 0x00;
 unsigned char TtempA = 0x00;
 unsigned char Oscillator = 0x00;
-const double C4 = 261.63;
 double input_frequency;
-
-// Enum 1 //
+unsigned char button;
+unsigned char increment;
+unsigned char decrement;
+const double C4 = 261.63;
+const double D4 = 293.66;
+const double E4 = 329.63;
+const double F4 = 349.23;
+const double G4 = 392.00;
+const double A4 = 440.00;
+const double B4 = 493.88;
+const double C5 = 523.25;
 
 enum TLED_States {init, b0, b1, b2} TLED_state;
-	
+
 void TLED_tick(){
 		
 		switch (TLED_state) { //transitions
@@ -158,8 +166,6 @@ void TLED_tick(){
 		PORTB = TtempB | (PORTB & 0x08);
 }
 
-// ENUM 2 //
-
 enum BLED_States {binit, bon, boff} BLED_state;
 	
 void BLED_tick(){
@@ -193,8 +199,6 @@ void BLED_tick(){
 	PORTB = TtempB;
 }
 
-// ENUM 3 //
-
  enum SPEK_States {sinit, Wait_toggle, A_toggled} SPEK_state;
 	 
  void SPEK_tick()
@@ -207,7 +211,7 @@ void BLED_tick(){
 			 break;
 			 
 			 case Wait_toggle:
-				if(TtempA == 0x04)
+				if(TtempA = 0x04)
 					{
 						SPEK_state = A_toggled;
 					}
@@ -218,7 +222,7 @@ void BLED_tick(){
 			 break;
 			 
 			 case A_toggled:
-				if(TtempA == 0x04)
+				if(TtempA = 0x04)
 					{
 						SPEK_state = A_toggled;
 					}
@@ -236,44 +240,122 @@ void BLED_tick(){
 		 switch (SPEK_state)  // Speaker State Machine Actions 
 		 {
 			 case sinit:
-				Oscillator = 0x01;
+				Oscillator = 1;
+				input_frequency = 0
 			 break;
 			 
 			 case Wait_toggle:
+				input_frequency = 0
 			 break;
 			 
 			 case A_toggled:
 				if(Oscillator)
 				{
-					TtempB = SetBit(TtempB,4,1);
 					input_frequency = C4;
 				}
 				else if(!Oscillator)
 				{
-					TtempB = SetBit(TtempB,4,0);
 					input_frequency = 0;
 				}
-				else
-				{}
 				Oscillator = !Oscillator;
+			 break;
+			 
+			 default:
+				input_frequency = 0
 			 break;
 		 }
 		 
 		 PORTB = TtempB;
 }
 
-// MAIN //
+enum INPUT_States {iinit, Wait_toggle, A_toggled} input_state;
 
+void INPUT_tick()
+{
+	switch (input_state) // Speaker State Machines Transitions
+	{
+		case iinit:
+			input_state = Wait_toggle;
+		break;
+	 
+		case Wait_toggle:
+			if(GetBit(TtempA,4))
+			{
+				input_state = A_toggled;
+			}
+			else 
+			{
+				input_state = Wait_toggle;
+			}
+		break;
+		
+		case A_toggled:
+			if(GetBit(TtempA,4))
+			{
+				input_state = A_toggled;
+			}
+			else
+			{
+				input_state = Wait_toggle;
+			}
+			break;
+			
+			 default:
+			 input_state = sinit;
+			 break;
+		 }
+		 
+		 switch (input_state)  // Speaker State Machine Actions
+		 {
+			 case iinit:
+			 button = ~PINA & 0x03;
+			 break;
+			 
+			 case Wait_toggle:
+			 button = ~PINA & 0x03;
+			 break;
+			 
+			 case A_toggled:
+			 button = ~PINA & 0x03;
+			 if(button == 0x01)
+			 {
+				 if(button == 0)
+				 {
+					 increment = 1;
+				 }
+
+			 }
+			 else if(button == 0x03)
+			 {
+				 if(button == 0)
+				 {
+					 decrement = 1;
+				 }
+
+			 }
+			 else
+			 {
+				 increment = 0;
+				 decrement = 0;
+			 }
+			 break;
+			 
+			 default:
+			 increment = 0;
+			 decrement = 0;
+			 break;
+		 }
+	 }
+	
+}
 int main(void)
 {
 	DDRA = 0x00; PORTA = 0xFF;
     DDRB = 0xFF; PORTB = 0x00;
 	unsigned long TLED_time = 0;
 	unsigned long BLED_time = 0;
-	TimerSet(2);
+	TimerSet(1);
 	TimerOn();
-	PWM_on();
-	
 	BLED_state = binit;
 	SPEK_state = sinit;
 	TLED_state = init;
@@ -290,15 +372,12 @@ int main(void)
 		BLED_time = 0;
 		}
 		SPEK_tick();
-		set_PWM(input_frequency);
-		
-		TimerFlag = 0;
-		TLED_time += 2;
-		BLED_time += 2;
-		
 		while(!TimerFlag);
-	
+		TimerFlag = 0;
+		TLED_time += 1;
+		BLED_time += 1;
 		
     }
 } 
+
 

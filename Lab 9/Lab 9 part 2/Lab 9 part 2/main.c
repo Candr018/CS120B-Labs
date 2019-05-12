@@ -405,4 +405,3 @@ int main(void)
 		set_PWM(input_frequency);
 	}
 }
-
