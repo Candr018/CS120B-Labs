@@ -51,7 +51,7 @@ int main()
 	DDRC = 0xF0; PORTC = 0x0F; // PC7..4 outputs init 0s, PC3..0 inputs init 1s
 	DDRD = 0xFF; PORTD = 0x00;
 	// Period for the tasks
-	unsigned long int SMTick1_calc = 10;
+	unsigned long int SMTick1_calc = 250;
 
 
 	//Calculating GCD

@@ -1,9 +1,4 @@
-/*
- * Project.c
- *
- * Created: 5/23/2019 12:33:54 PM
- * Author : User
- */ 
+
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -17,6 +12,13 @@
 // based on settings in PWM_on()
 
 // Passing in 0 as the frequency will stop the speaker from generating sound
+
+volatile unsigned char TimerFlag = 0; // TimerISR() sets this to 1. C programmer should clear to 0.
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+
+// Internal variables for mapping AVR's ISR to our cleaner TimerISR model.
+unsigned long _avr_timer_M = 1; // Start count from here, down to 0. Default 1 ms.
+unsigned long _avr_timer_cntcurr = 0; // Current internal count of 1ms ticks
 
 void set_PWM(double frequency) {
 
@@ -114,74 +116,16 @@ void ADC_init() {
 unsigned char tmpB = 0x00;
 unsigned char cursor_loc = 1;
 unsigned char update_screen = 0;
-unsigned char counter = 0;
-unsigned char button = 0;
 enum SM1_States{SM1_input};
 enum SM2_States{SM2_init, SM2_update};
-enum Run_States{init, wait, play} next_state;
-int Tick1(int state){
-	unsigned char tempA = 0x00;
-	switch(next_state) { //transitions
-		// --- initialize the LCD we want to update ---- //
-		case init:
-			next_state = wait;
-		break;
-
-		case wait:
-			if (tempA == 0x00) 
-				{
-					state = wait;
-					tempA = 0x01;
-				}
-
-			else 
-				{
-					state = play;
-				}
-		break;
-
-		case play:
-			if (tempA == 0x00)
-				{
-					state = wait;
-				}
-
-			else 
-				{
-					state = play;
-				}
-		break;
-
-		default:
-			state = wait;
-		break;
-
-	}//transitions
-
 	
+int Tick1(int state){
+	switch(state){
+		case SM1_input:
+		
 
-	switch(state) { //actions
-
-		case init:
-		break;
-
-		case wait:
-			if (update_screen > 0 && counter == 4)
-				{
-					update_screen--;
-				}
-		button = 0;
-		break;
-
-		case play:
-
-		break;
-
-		default:
-
-		break;
-
-	} //actions
+	}
+	return state;
 }
 
 int Tick2(int state){

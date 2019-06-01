@@ -1,19 +1,3 @@
-/*
-
- * nmuel_project.c
-
- *
-
- * Created: 3/5/2018 1:49:33 PM
-
- *  Author: Nathanael Mueller 861237712
-
- */ 
-
-
-
-
-
 #include <avr/io.h>
 
 #include <avr/interrupt.h>
@@ -435,7 +419,7 @@ void tickSM(unsigned char display_counter) {
 				rec_state = in_progress;
 
 			}
-
+	
 			//update vars based on current note
 
 			if (tempB == 0x01) {
