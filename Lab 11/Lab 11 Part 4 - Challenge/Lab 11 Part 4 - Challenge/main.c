@@ -19,7 +19,7 @@
 unsigned char tmpB = 0x00;
 unsigned char cursor_loc = 1;
 unsigned char x;
-enum SM1_States{SM1_output};
+enum SM1_States{SM1_input, SM1_output};
 enum SM2_States{SM2_logic};
 	
 int SMTick1(int state){
@@ -44,111 +44,188 @@ int SMTick1(int state){
 			case '*': tmpB = 0x0E;
 			case '0': tmpB = 0x00;
 			case '#': tmpB = 0x0F;
-			default: tmpB = 0x1B; break; // Should never occur. Middle LED off.
+			default: break; // Should never occur. Middle LED off.
 		}
 		state = SM2_logic;
 		break;
 	}
 	return state;
 }
-
 int SMTick2(int state){
 	switch(state){
+		case SM1_input:
+			if (cursor_loc == 1)
+			{
+				LCD_Cursor(1);
+			}
+			else if (cursor_loc == 2)
+			{
+				LCD_Cursor(2);
+			}
+			else if (cursor_loc == 3)
+			{
+				LCD_Cursor(3);
+			}
+			else if (cursor_loc == 4)
+			{
+				LCD_Cursor(4);
+			}
+			else if (cursor_loc == 5)
+			{
+				LCD_Cursor(5);
+			}
+			else if (cursor_loc == 6)
+			{
+				LCD_Cursor(6);
+			}
+			else if (cursor_loc == 7)
+			{
+				LCD_Cursor(7);
+			}
+			else if (cursor_loc == 8)
+			{
+				LCD_Cursor(8);
+			}
+			else if (cursor_loc == 9)
+			{
+				LCD_Cursor(9);
+			}
+			else if (cursor_loc == 10)
+			{
+			LCD_Cursor(10);
+			}
+			else if (cursor_loc == 11)
+			{
+				LCD_Cursor(11);
+			}
+			else if (cursor_loc == 12)
+			{
+				LCD_Cursor(12);
+			}
+			else if (cursor_loc == 13)
+			{
+				LCD_Cursor(13);
+			}
+			else if (cursor_loc == 14)
+			{
+				LCD_Cursor(14);
+			}
+			else if (cursor_loc == 15)
+			{
+				LCD_Cursor(15);
+			}
+			else if (cursor_loc == 16)
+			{
+				LCD_Cursor(16);
+			}
+			else if (cursor_loc == 17)
+			{
+				LCD_Cursor(17);
+			}
+			else
+			{
+				LCD_Cursor(1);
+			}
+			state = SM1_output;
+		break;
+		
 		case SM1_output:
-		if(cursor_loc <= 16)
-		{
 			switch (x) 
 			{
 				case '\0': break; // All 5 LEDs on
 			
 				case '1': 
-				LCD_Cursor(cursor_loc);
-				LCD_WriteData(tmpB + '0');
+				LCD_WriteData(1 + '0');
+				cursor_loc = cursor_loc + 1;
 				break;
 			
-				case '2': 
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + '0');
+				case '2':  
+				LCD_WriteData(2 + '0');
+				cursor_loc = cursor_loc + 1;
 				break;
 			
-				case '3': 
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + '0');
+				case '3':  
+				LCD_WriteData(3 + '0');
+				cursor_loc = cursor_loc + 1;
 				break;
 			
 				case '4': 
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + '0'); 
+				LCD_WriteData(4 + '0');
+				cursor_loc = cursor_loc + 1;				
 				break;
 			
 				case '5': 
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + '0'); 
+				LCD_WriteData(5 + '0'); 
+				cursor_loc = cursor_loc + 1;
 				break;
 			
-				case '6': 
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + '0'); 
+				case '6':  
+				LCD_WriteData(6 + '0');
+				cursor_loc = cursor_loc + 1;				
 				break;
 			
 				case '7': 
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + '0');
+				LCD_WriteData(7 + '0');
+				cursor_loc = cursor_loc + 1;
 				break;
 			
 				case '8': 
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + '0'); 
+				LCD_WriteData(8 + '0'); 
+				cursor_loc = cursor_loc + 1;
 				break;
 			
 				case '9': 
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + '0'); 
+				LCD_WriteData(9 + '0');
+				cursor_loc = cursor_loc + 1;				
 				break;
 			
 				case 'A': 
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + 0x37); 
+				LCD_WriteData(0x0A + 0x37);
+				cursor_loc = cursor_loc + 1;
 				break;
 			
 				case 'B':  
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + 0x37); 
+				LCD_WriteData(0x0B + 0x37); 
+				cursor_loc = cursor_loc + 1;
 				break;
 			
 				case 'C':  
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + 0x37); 
+				LCD_WriteData(0x0C + 0x37);
+				cursor_loc = cursor_loc + 1;				
 				break;
 			
-				case 'D':  
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + 0x37); 
+				case 'D':   
+				LCD_WriteData(0x0D + 0x37);
+				cursor_loc = cursor_loc + 1;
 				break;
 			
 				case '*':  
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + 0x1C); 
+				LCD_WriteData(0x0E + 0x1C);
+				cursor_loc = cursor_loc + 1;
 				break;
 			
 				case '0':  
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + '0'); 
+				LCD_WriteData(0x00 + '0');
+				cursor_loc = cursor_loc + 1;				
 				break;
 			
 				case '#':  
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + 0x14); 
+				LCD_WriteData(0x0F + 0x14);
+				cursor_loc = cursor_loc + 1;
 				break;
 			
 				default:
 				break;
-				
-				cursor_loc++;
 			}
+		if(cursor_loc == 17)
+		{
+			cursor_loc = 1;
 		}
-		state = SM1_output;
-		PORTB=tmpB;
+		else
+		{
+			cursor_loc = cursor_loc;
+		}
+		state = SM1_input;
 		break;
 	}
 	return state;
@@ -163,7 +240,7 @@ int main(void)
 	DDRC = 0xF0; PORTC = 0x0F; // PC7..4 outputs init 0s, PC3..0 inputs init 1s
 	DDRD = 0xFF; PORTD = 0x00;
 	// Period for the tasks
-	unsigned long int SMTick1_calc = 50;
+	unsigned long int SMTick1_calc = 100;
 
 
 	//Calculating GCD
@@ -200,7 +277,7 @@ int main(void)
 	// Initializes the LCD display
 	LCD_init();
 	// Starting at position 1 on the LCD screen, writes Hello World
-	LCD_DisplayString(1,"Congratulations!");
+	LCD_DisplayString(1, "Congratulations!");
 	// ------------------1234567890123456
 
 	unsigned short i; // Scheduler for-loop iterator
