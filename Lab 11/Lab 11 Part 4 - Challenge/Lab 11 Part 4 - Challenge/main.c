@@ -19,6 +19,7 @@
 unsigned char tmpB = 0x00;
 unsigned char cursor_loc = 1;
 unsigned char x;
+unsigned char unique_press = 0;
 enum SM1_States{SM1_output};
 enum SM2_States{SM2_logic};
 	
@@ -55,98 +56,103 @@ int SMTick1(int state){
 int SMTick2(int state){
 	switch(state){
 		case SM1_output:
-		if(cursor_loc <= 16)
-		{
-			switch (x) 
-			{
-				case '\0': break; // All 5 LEDs on
+			if(cursor_loc <= 16)
+				{
+					switch (x) 
+				{
+					case '\0': break; // All 5 LEDs on
 			
-				case '1': 
-				LCD_Cursor(cursor_loc);
-				LCD_WriteData(tmpB + '0');
-				break;
+					case '1': 
+					LCD_Cursor(cursor_loc);
+					LCD_WriteData(tmpB + '0');
+					break;
 			
-				case '2': 
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + '0');
-				break;
+					case '2': 
+					LCD_Cursor(cursor_loc); 
+					LCD_WriteData(tmpB + '0');
+					break;
 			
-				case '3': 
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + '0');
-				break;
+					case '3': 
+					LCD_Cursor(cursor_loc); 
+					LCD_WriteData(tmpB + '0');
+					break;
 			
-				case '4': 
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + '0'); 
-				break;
+					case '4': 
+					LCD_Cursor(cursor_loc); 
+					LCD_WriteData(tmpB + '0'); 
+					break;
 			
-				case '5': 
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + '0'); 
-				break;
+					case '5': 
+					LCD_Cursor(cursor_loc); 
+					LCD_WriteData(tmpB + '0'); 
+					break;
 			
-				case '6': 
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + '0'); 
-				break;
+					case '6': 
+					LCD_Cursor(cursor_loc); 
+					LCD_WriteData(tmpB + '0'); 
+					break;
 			
-				case '7': 
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + '0');
-				break;
+					case '7': 
+					LCD_Cursor(cursor_loc); 
+					LCD_WriteData(tmpB + '0');
+					break;
 			
-				case '8': 
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + '0'); 
-				break;
+					case '8': 
+					LCD_Cursor(cursor_loc); 
+					LCD_WriteData(tmpB + '0'); 
+					break;
 			
-				case '9': 
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + '0'); 
-				break;
+					case '9': 
+					LCD_Cursor(cursor_loc); 
+					LCD_WriteData(tmpB + '0'); 
+					break;
 			
-				case 'A': 
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + 0x37); 
-				break;
+					case 'A': 
+					LCD_Cursor(cursor_loc); 
+					LCD_WriteData(tmpB + 0x37); 
+					break;
 			
-				case 'B':  
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + 0x37); 
-				break;
+					case 'B':  
+					LCD_Cursor(cursor_loc); 
+					LCD_WriteData(tmpB + 0x37); 
+					break;
 			
-				case 'C':  
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + 0x37); 
-				break;
+					case 'C':  
+					LCD_Cursor(cursor_loc); 
+					LCD_WriteData(tmpB + 0x37); 
+					break;
 			
-				case 'D':  
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + 0x37); 
-				break;
+					case 'D':  
+					LCD_Cursor(cursor_loc); 
+					LCD_WriteData(tmpB + 0x37); 
+					break;
 			
-				case '*':  
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + 0x1C); 
-				break;
+					case '*':  
+					LCD_Cursor(cursor_loc); 
+					LCD_WriteData(tmpB + 0x1C); 
+					break;
 			
-				case '0':  
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + '0'); 
-				break;
+					case '0':  
+					LCD_Cursor(cursor_loc); 
+					LCD_WriteData(tmpB + '0'); 
+					break;
 			
-				case '#':  
-				LCD_Cursor(cursor_loc); 
-				LCD_WriteData(tmpB + 0x14); 
-				break;
+					case '#':  
+					LCD_Cursor(cursor_loc); 
+					LCD_WriteData(tmpB + 0x14); 
+					break;
 			
-				default:
-				break;
+					default:
+					break;
 				
-				cursor_loc++;
+					cursor_loc++;
+				}
 			}
-		}
+			else
+			{
+				cursor_loc = 1;
+				//if the project is running
+			}
 		state = SM1_output;
 		PORTB=tmpB;
 		break;
