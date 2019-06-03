@@ -4,6 +4,7 @@
 #include <avr/eeprom.h>
 #include "io.c"
 #include "timer.h"
+#include "scheduler.h"
 
 // 0.954 Hz is lowest frequency possible with this function,
 // based on settings in PWM_on()
@@ -54,14 +55,6 @@ void LCD_Custom_Char (unsigned char loc, unsigned char *msg)
 	}
 }
 
-typedef struct _task {
-	/*Tasks should have members that include: state, period,
-		a measurement of elapsed time, and a function pointer.*/
-	signed char state; //Task's current state
-	unsigned long int period; //Task period
-	unsigned long int elapsedTime; //Time elapsed since last task tick
-	int (*TickFct)(int); //Task tick function
-} task;
 
 // --------------------------- Piano Octave Definitions -------------------------- //
 // First (Lowest) Octave
@@ -156,7 +149,7 @@ unsigned char button_exit = 0x00;	// If the user wishes to go back in the nested
 unsigned char RXFlag = 0;	// record flag to prevent other actions
 unsigned char OCTFlag = 0;  // octave flag to prevent other actions
 unsigned char cursor_loc = 1; // position of the cursor on the LCD
-unsigned char update_screen = 0; // Weather of not the LCD should be updated
+unsigned char update_screen = 1; // Weather of not the LCD should be updated
 
 unsigned char button_up;		// button to move up an octave
 unsigned char button_down;		// button to move down an octave
@@ -167,8 +160,7 @@ double note;     // frequency to be output to the speaker
 
 enum Piano {init, first_octave, second_octave, thrid_octave, fourth_octave, fifth_octave, sixth_octave, seventh_octave};
 enum LCD_MENU{init_menu, change_octave, select_octave, visualization, select_vis, record, select_record, play, select_play};
-enum IO_CTL{init_buttons, user_io};
-enum LCD_SEL{init_select, sel_octave, sel_rec, sel_play};
+	
 
 int piano_tick(next_octave) {
 	
@@ -694,6 +686,7 @@ int piano_tick(next_octave) {
 		}
 		break;
 	}
+	return next_octave; 
 }
 		
 int LCD_tick(int next_state){
@@ -705,7 +698,7 @@ int LCD_tick(int next_state){
 		break;
 		
 		case change_octave:
-			if(button_enter == 0 && button_right == 1 && button_left == 0 && update_screen == 1)	// Right
+			/*if(button_enter == 0 && button_right == 1 && button_left == 0 && update_screen == 1)	// Right
 				{	// User wants to go right on the menu
 					next_state = record;
 				}
@@ -714,9 +707,9 @@ int LCD_tick(int next_state){
 					next_state = select_octave;
 				}
 			else
-				{
+				{ */
 					next_state = change_octave;
-				}
+				//}
 		break;
 
 		case record:
@@ -820,17 +813,37 @@ int LCD_tick(int next_state){
 	switch(next_state){ // STATE MACHINE ACTIONS
 		
 		case init_menu:
-			LCD_DisplayString(1, menu_top);	// Displays the top menu
+			for(int j = 1; j <= 16; j++)
+			{
+				LCD_Cursor(j);
+				LCD_WriteData(menu_top[j-1]);
+			}
+			
+			LCD_Cursor(16);
+			LCD_WriteData(' ');		// Displays the top menu
 		break;
 		
 		case change_octave:
-			LCD_DisplayString(1, menu_top);	// Displays the top menu
-			LCD_Cursor(18);
 			
-			for(i=0;i<6;i++)		// This shows the user that he or she is selected change octave
+			if(update_screen == 1)
+			{
+				for(int j = 1; j <= 16; j++)
+				{
+					LCD_Cursor(j);
+					LCD_WriteData(menu_top[j-1]);
+				}
+				
+				LCD_Cursor(16);
+				LCD_WriteData(' ');
+				
+				LCD_Cursor(18);
+				for(i=0;i<6;i++)		// This shows the user that he or she is selected change octave
 				{
 					LCD_WriteData(0);		// Using custom char 0
 				}
+				update_screen = 0;
+			}
+			
 		break;
 
 		case record:
@@ -886,7 +899,7 @@ int LCD_tick(int next_state){
 		DDRA = 0x00; PORTA = 0xFF; // Configure PORTA as input for the piano keys, initialize to 1s
 		DDRB = 0xFF; PORTB = 0x00; // B6 is speaker output
 		DDRC = 0xFF; PORTC = 0x00; // LCD data lines
-		DDRD = 0xC0; PORTD = 0x3F; // LCD control lines
+		DDRD = 0xFF; PORTD = 0x00; // LCD control lines
 
 		LCD_init();	
 		
@@ -902,11 +915,11 @@ int LCD_tick(int next_state){
 		LCD_WriteCommand(0x80);
 		LCD_Cursor(1);
 		// Period for the tasks
-		unsigned long int LCD_menu_period = 10;
-		unsigned long int Piano_period = 10;
+		unsigned long int LCD_menu_period = 250;
+		unsigned long int Piano_period = 250;
 
 		//Calculating GCD
-		unsigned long int tmpGCD = 10;
+		unsigned long int tmpGCD = 1;
 
 		//Greatest common divisor for all tasks or smallest time unit for tasks.
 		unsigned long int GCD = tmpGCD;
@@ -919,18 +932,18 @@ int LCD_tick(int next_state){
 		static task task1;
 		static task task2;
 		task *tasks[] = {&task1, &task2}; // FIX FOR NUMBER OF SM
-		const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
-
+		const unsigned short numTasks =  sizeof(tasks)/sizeof(task*);
+		
 		// Task 1
-		task1.state = init_menu;//Task initial state.
+		task1.state = 0;//Task initial state.
 		task1.period = SMTick1_period;//Task Period.
 		task1.elapsedTime = SMTick1_period;//Task current elapsed time.
 		task1.TickFct = &LCD_tick;//Function pointer for the tick.
 		
-		task2.state = init;//Task initial state.
-		task1.period = SMTick2_period;//Task Period.
-		task1.elapsedTime = SMTick2_period;//Task current elapsed time.
-		task1.TickFct = &piano_tick;//Function pointer for the tick.
+		task2.state = 0;//Task initial state.
+		task2.period = SMTick2_period;//Task Period.
+		task2.elapsedTime = SMTick2_period;//Task current elapsed time.
+		task2.TickFct = &piano_tick;//Function pointer for the tick.
 		
 		// Set the timer and turn it on
 		TimerSet(GCD);
@@ -939,7 +952,6 @@ int LCD_tick(int next_state){
 		// Initializes the LCD display
 		// Starting at position 1 on the LCD screen, writes Hello World
 		LCD_ClearScreen();
-		// ------------------1234567890123456
 
 		unsigned short i; // Scheduler for-loop iterator
 		while(1) {
