@@ -3,17 +3,13 @@
 #include <stdlib.h>
 #include <avr/eeprom.h>
 #include "io.c"
-#include "usart.h"
 
 // 0.954 Hz is lowest frequency possible with this function,
-
 // based on settings in PWM_on()
-
 // Passing in 0 as the frequency will stop the speaker from generating sound
 
 volatile unsigned char TimerFlag = 0; // TimerISR() sets this to 1. C programmer should clear to 0.
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
-
 // Internal variables for mapping AVR's ISR to our cleaner TimerISR model.
 unsigned long _avr_timer_M = 1; // Start count from here, down to 0. Default 1 ms.
 unsigned long _avr_timer_cntcurr = 0; // Current internal count of 1ms ticks
@@ -52,6 +48,18 @@ void PWM_off() {
 	TCCR3B = 0x00;
 }
 
+// ------- FUNCTION TO BUILD CUSTOM CHARACTERS ON THE LCD -------- // 
+void LCD_Custom_Char (unsigned char loc, unsigned char *msg)
+{
+	unsigned char i;
+	if(loc<8)
+	{
+		LCD_WriteCommand(0x40 + (loc*8));	/* Command 0x40 and onwards forces the device to point CGRAM address */
+		for(i=0;i<8;i++)	/* Write 8 byte for generation of 1 character */
+		LCD_WriteData(msg[i]);
+	}
+}
+
 typedef struct _task {
 	/*Tasks should have members that include: state, period,
 		a measurement of elapsed time, and a function pointer.*/
@@ -61,130 +69,36 @@ typedef struct _task {
 	int (*TickFct)(int); //Task tick function
 } task;
 
-	unsigned char empty_bar[] = {
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000
-	};
+	// CUSTOM CHARACTER DEFINTIONS TO BE USED ON THE LCD --- (MAX 8) --- //
+	unsigned char one_bar[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1F};	// 1
+	unsigned char two_bars[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1F, 0x1F};	// 2
+	unsigned char three_bars[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x1F, 0x1F, 0x1F};	// 3
+	unsigned char four_bars[] = { 0x00, 0x00, 0x00, 0x00, 0x1F, 0x1F, 0x1F, 0x1F};	// 4
+	unsigned char five_bars[] = { 0x00, 0x00, 0x00, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F};  // 5
+	unsigned char six_bars[] = { 0x00, 0x00, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F};	// 6
+	unsigned char seven_bars[] = { 0x00, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F}; // 7
+	unsigned char top_bar[] = { 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};	// 8
+	
 
-	unsigned char almost_low_bar[] = {
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b11111
-	};
 
-	unsigned char low_bar[] = {
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b11111,
-		0b11111
-	};
-
-	unsigned char almost_med_bar[] = {
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b11111,
-		0b11111,
-		0b11111
-	};
-
-	unsigned char med_bar[] = {
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111
-	};
-
-	unsigned char almost_high_bar[] = {
-		0b00000,
-		0b00000,
-		0b00000,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111
-	};
-
-	unsigned char high_bar[] = {
-		0b00000,
-		0b00000,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111
-	};
-
-	unsigned char almost_full_bar[] = {
-		0b00000,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111
-	};
-
-	unsigned char full_bar[] = {
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111,
-		0b11111
-	};
-
-	unsigned char top_bar[] = {
-		0b11111,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000,
-		0b00000
-	};
 // -------------------------------------------------------------------------------------------------------------- //
-
+// ----------------------------------------------- MENU DEFINITIONS --------------------------------------------- //
 const unsigned char menu_top[15] = {' ','O','C','T','A','V','E',' ','R','E','C','O','R','D',' '};
 	// ----------------------------- 1   2   3   4   5   6   7   8   9   10  11  12  14  15  16 ------------------- //
-const unsigned char menu_bot[15] = {' ','P','L','A','Y','B','A','C','K',' ',' ',' ',' ',' ',' '};
+const unsigned char menu_bot[15] = {' ','P','L','A','Y',' ','V','I','S','U','A','L','I','Z','E'};
 	// ----------------------------- 1   2   3   4   5   6   7   8   9   10  11  12  14  15  16 ------------------- //
-unsigned char button_left = 0x00;
-unsigned char button_right = 0x00;
-unsigned char button_enter = 0x00;
-unsigned char button_exit = 0x00;
+const unsigned char menu_octave[15] = {' ','1',' ','2',' ','3',' ','4',' ','5',' ','6',' ','7',' '};
+	// -------------------------------- 1   2   3   4   5   6   7   8   9   10  11  12  14  15  16 ------------------- //
+	
+unsigned char button_left = 0x00;	// to record if the user wants to go left on the menu
+unsigned char button_right = 0x00;	// to record if the user wants to go right on the menu ( only left and right are valid directions)
+unsigned char button_enter = 0x00;	// If the user selects enter at a given location in the menu
+unsigned char button_exit = 0x00;	// If the user wishes to go back in the nested menu
 
-unsigned char RXFlag = 0;
+unsigned char RXFlag = 0;	// record flag to prevent other actions
 
-unsigned char cursor_loc = 1;
-unsigned char update_screen = 0;
+unsigned char cursor_loc = 1; // position of the cursor on the LCD
+unsigned char update_screen = 0; // Weather of not the LCD should be updated
 
 enum LCD_MENU{init_menu, change_octave, select_octave, visualization, select_vis, record, select_record, playback, select_playback};
 enum IO_CTL{init_buttons, user_io};
@@ -193,17 +107,35 @@ enum LCD_SEL{init_select, sel_octave, sel_rec, sel_play};
 int LCD_tick(int next_state){
 	
 	switch(next_state){ // STATE MACHINE TRANSITIONS
-		
+
 		case init_menu:
 		next_state = change_octave;
 		break;
 		
 		case change_octave:
-		
+			if(button_right == 1 && button_left == 0 && update_screen == 1)
+				{	// User wants to go right on the menu
+					next_state = record;
+				}
+			else if(button_enter == 1 && button_left == 0 && button_right == 0 && update_screen == 1)
+				{	// User wants to change the octave
+					next_state = select_octave;
+				}
+			else
+				{
+					next_state = change_octave;
+				}
 		break;
 
 		case visualization:
-
+			if(button_right == 1 && button_left == 0 && update_screen == 1)
+				{
+					next_state = record;
+				}
+			else
+				{
+					next_state = change_octave;
+				}
 		break;
 		
 		case record:
@@ -235,11 +167,22 @@ int LCD_tick(int next_state){
 	{
 		DDRA = 0xFF; PORTA = 0x00;
 		DDRB = 0xFF; PORTB = 0x00;
-		DDRC = 0xF0; PORTC = 0x0F; 
-		DDRD = 0xFF; PORTD = 0x00;
+		DDRC = 0xFF; PORTC = 0x00; // LCD data lines
+		DDRD = 0xFF; PORTD = 0x00; // LCD control lines
 
-		LCD_init();
-		LCD_WriteCommand(0x0C);		
+		LCD_init();	
+		
+		LCD_Custom_Char(0, top_bar);	/* Build Character1 at position 0 */
+		LCD_Custom_Char(1, one_bar);	/* Build Character2 at position 1 */
+		LCD_Custom_Char(2, two_bars);	/* Build Character3 at position 2 */
+		LCD_Custom_Char(3, three_bars); /* Build Character4 at position 3 */
+		LCD_Custom_Char(4, four_bars);  /* Build Character5 at position 4 */
+		LCD_Custom_Char(5, five_bars);  /* Build Character6 at position 5 */
+		LCD_Custom_Char(6, six_bars);	/* Build Character6 at position 6 */
+		LCD_Custom_Char(7, seven_bars); /* Build Character6 at position 7 */
+			
+		LCD_WriteCommand(0x80);
+		LCD_Cursor(1);
 		// Period for the tasks
 		unsigned long int LCD_menu_period = 10;
 
@@ -254,7 +197,7 @@ int LCD_tick(int next_state){
 
 		//Declare an array of tasks
 		static task task1;
-		task *tasks[] = {&task1};
+		task *tasks[] = {&task1}; // FIX FOR NUMBER OF SM
 		const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
 
 		// Task 1

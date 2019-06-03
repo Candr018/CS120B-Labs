@@ -11,10 +11,10 @@
 #include <bit.h>
 
 // Define LCD port assignments here so easier to change than if hardcoded below
-#define LCD_DATA PORTD	// LCD 8-bit data bus
-#define LCD_CTRL PORTB	// LCD needs 2-bits for control
-#define LCD_RS   3 		// LCD Reset pin
-#define LCD_E    4		// LCD Enable pin
+#define LCD_DATA PORTC	// LCD 8-bit data bus
+#define LCD_CTRL PORTD	// LCD needs 2-bits for control
+#define LCD_RS   6 		// LCD Reset pin
+#define LCD_E    7		// LCD Enable pin
 
 // Set by LCD interface synchSM, ready to display new string
 unsigned char LCD_rdy_g = 0;
