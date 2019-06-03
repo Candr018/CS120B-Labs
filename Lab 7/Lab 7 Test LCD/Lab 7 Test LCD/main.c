@@ -17,8 +17,7 @@ int main(void)
 	LCD_init();
 	
 	// Starting at position 1 on the LCD screen, writes Hello World
-	//LCD_DisplayString(1, "Hello World");
-	LCD_ClearScreen();
+	LCD_DisplayString(1, "Hello World");
 	while(1) {continue;}
 }
 
