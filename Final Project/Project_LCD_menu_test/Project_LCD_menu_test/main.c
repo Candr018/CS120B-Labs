@@ -149,21 +149,20 @@ unsigned char blink = 0x00;			// Blink the selection indicator
 
 unsigned char RXFlag = 0;	// record flag to prevent other actions
 unsigned char OCTFlag = 0;  // octave flag to prevent other actions
+unsigned char VISFlag = 0;  // vis flag to prevent other actions
 unsigned char cursor_loc = 1; // position of the cursor on the LCD
 unsigned char update_screen = 1; // Weather of not the LCD should be updated
 
-unsigned char button_up;		// button to move up an octave
-unsigned char button_down;		// button to move down an octave
 unsigned char Octave = 0x04;	// The octave currently being played
-unsigned char time_passed;  // check to see if the buttons are not longer being pressed
 
 double note;     // frequency to be output to the speaker
 
-enum Piano {init, first_octave, second_octave, thrid_octave, fourth_octave, fifth_octave, sixth_octave, seventh_octave};
+enum PIANO {init, first_octave, second_octave, thrid_octave, fourth_octave, fifth_octave, sixth_octave, seventh_octave};
 enum LCD_MENU{init_menu, change_octave, select_octave, visualization, select_vis, record, select_record, play, select_play};
-	
+enum LCD_VIS{init_vis, wait_flag, first_oct_1, first_oct_2, sec_oct_1, sec_oct_2, thrid_oct_1, fourth_oct_1, fifth_oct_1, sixth_oct_1, sev_oct_1
+	};
 
-int piano_tick(next_octave) {
+int piano_tick(int next_octave) {
 	
 	unsigned char tempB = ~PINA & 0xFF;
 	tempB = tempB >> 1;
@@ -689,7 +688,116 @@ int piano_tick(next_octave) {
 	}
 	return next_octave; 
 }
+int Vis_tick(int next_vis)
+{
+	switch(next_vis) // State Transitions
+	{
+		case init_vis:
+			next_vis = wait_flag;
+		break;
 		
+		case wait_flag:
+			if(VISFlag == 1)
+				{
+					if(Octave == 0x01) // CONDITIONALS TO GO TO THE CURRENT OCTAVE
+						{
+							next_vis = first_oct_1;
+						}
+					else if(Octave == 0x02)
+						{
+							next_vis = sec_oct_1;
+						}
+					else if(Octave == 0x03)
+						{
+							next_vis = thrid_oct_1;
+						}
+					else if(Octave == 0x04)
+						{
+							next_vis = fourth_oct_1;
+						}
+					else if(Octave == 0x05)
+						{
+							next_vis = fifth_oct_1;
+						}
+					else if(Octave == 0x06)
+						{
+							next_vis = sixth_oct_1;
+						}
+					else if(Octave == 0x07)	
+						{
+							next_vis = sev_oct_1;
+						}
+					else // Should never occur
+						{
+							next_vis = wait_flag 
+						}
+				}
+			else  // otherwise wait for the flag to be set
+				{
+					next_vis = wait_flag;
+				}
+		break;
+		
+		case first_oct_1:
+			if(VISFlag == 1)
+			{
+				if(note == 0.0)
+				{
+					next_vis = first_oct_1;
+				}
+				else
+				{
+					next_vis = first_oct_2;
+				}
+			}
+			else
+			{
+				next_vis = wait_flag;
+			}
+		break;
+		
+		case first_oct_2:
+			if(VISFlag == 1)
+			{
+				if(note == 0.0)
+				{
+					next_vis = first_oct_1;
+				}
+				else
+				{
+					next_vis = first_oct_2;
+				}
+			}
+			else
+			{
+				next_vis = wait_flag;
+			}
+		break;
+		
+		case sec_oct_1:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = sec_oct_1;
+			}
+			else
+			{
+				next_vis = sec_oct_2;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
+	}
+	switch(next_vis) // State Actions
+	{
+		
+	}
+	return next_vis;
+}
 int LCD_tick(int next_state){
 	unsigned char i = 0;
 	switch(next_state){ // STATE MACHINE TRANSITIONS
@@ -958,7 +1066,7 @@ int LCD_tick(int next_state){
 		LCD_WriteCommand(0x80);
 		LCD_Cursor(1);
 		// Period for the tasks
-		unsigned long int LCD_menu_period = 100;
+		unsigned long int LCD_menu_period = 50;
 		unsigned long int Piano_period = 10;
 
 		//Calculating GCD
