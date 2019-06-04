@@ -159,8 +159,14 @@ double note;     // frequency to be output to the speaker
 
 enum PIANO {init, first_octave, second_octave, thrid_octave, fourth_octave, fifth_octave, sixth_octave, seventh_octave};
 enum LCD_MENU{init_menu, change_octave, select_octave, visualization, select_vis, record, select_record, play, select_play};
-enum LCD_VIS{init_vis, wait_flag, first_oct_1, first_oct_2, sec_oct_1, sec_oct_2, thrid_oct_1, fourth_oct_1, fifth_oct_1, sixth_oct_1, sev_oct_1
-	};
+enum LCD_VIS{init_vis, wait_flag, 
+	first_oct_0, first_oct_1, 
+	sec_oct_0, sec_oct_1, sec_oct_2, 
+	thrid_oct_0, thrid_oct_1, thrid_oct_2, thrid_oct_3, 
+	fourth_oct_0, fourth_oct_1, fourth_oct_2, fourth_oct_3, fourth_oct_4,
+	fifth_oct_0, fifth_oct_1, fifth_oct_2, fifth_oct_3, fifth_oct_4, fifth_oct_5,
+	sixth_oct_0, sixth_oct_1, sixth_oct_2, sixth_oct_3, sixth_oct_4, sixth_oct_5, sixth_oct_6,
+	sev_oct_0, sev_oct_1, sev_oct_2, sev_oct_3, sev_oct_4, sev_oct_5, sev_oct_6, sev_oct_7};
 
 int piano_tick(int next_octave) {
 	
@@ -737,17 +743,35 @@ int Vis_tick(int next_vis)
 					next_vis = wait_flag;
 				}
 		break;
-		
+		// ---------------- first octave 0 visualization ----------------- //
+		case first_oct_0:
+			if(VISFlag == 1)
+			{
+				if(note == 0.0)
+				{
+					next_vis = first_oct_0;
+				}
+				else
+				{
+					next_vis = first_oct_1;
+				}
+			}
+			else
+			{
+				next_vis = wait_flag;
+			}
+		break;
+		// ---------------- first octave 1 visualization ----------------- //
 		case first_oct_1:
 			if(VISFlag == 1)
 			{
 				if(note == 0.0)
 				{
-					next_vis = first_oct_1;
+					next_vis = first_oct_0;
 				}
 				else
 				{
-					next_vis = first_oct_2;
+					next_vis = first_oct_1;
 				}
 			}
 			else
@@ -755,26 +779,44 @@ int Vis_tick(int next_vis)
 				next_vis = wait_flag;
 			}
 		break;
-		
-		case first_oct_2:
-			if(VISFlag == 1)
+		// ---------------- second octave 0 visualization ----------------- //
+		case sec_oct_0:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
 			{
-				if(note == 0.0)
-				{
-					next_vis = first_oct_1;
-				}
-				else
-				{
-					next_vis = first_oct_2;
-				}
+				next_vis = sec_oct_0;
 			}
 			else
 			{
-				next_vis = wait_flag;
+				next_vis = sec_oct_1;
 			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
 		break;
-		
+		// ---------------- second octave 1 visualization ----------------- //
 		case sec_oct_1:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = sec_oct_0;
+			}
+			else
+			{
+				next_vis = sec_oct_2;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
+		// ---------------- second octave 2 visualization ----------------- //
+		case sec_oct_2:
 		if(VISFlag == 1)
 		{
 			if(note == 0.0)
@@ -791,7 +833,368 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
+		// ---------------- third octave 0 visualization ----------------- //
+		case thrid_oct_0:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = thrid_oct_0;
+			}
+			else
+			{
+				next_vis = thrid_oct_1;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
+		// ---------------- third octave 1 visualization ----------------- //
+		case thrid_oct_1:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = thrid_oct_0;
+			}
+			else
+			{
+				next_vis = thrid_oct_2;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
+		// ---------------- third octave 2 visualization ----------------- //
+		case thrid_oct_2:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = thrid_oct_3;
+			}
+			else
+			{
+				next_vis = thrid_oct_1;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
+		// ---------------- third octave 3 visualization ----------------- //
+		case thrid_oct_3:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = thrid_oct_2;
+			}
+			else
+			{
+				next_vis = thrid_oct_3;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
+		// ---------------- fourth octave 0 visualization ----------------- //
+		case fourth_oct_0:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = fourth_oct_0;
+			}
+			else
+			{
+				next_vis = fourth_oct_1;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
+		// ---------------- fourth octave 1 visualization ----------------- //
+		case fourth_oct_1:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = fourth_oct_0;
+			}
+			else
+			{
+				next_vis = fourth_oct_2;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
+		// ---------------- fourth octave 2 visualization ----------------- //
+		case fourth_oct_2:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = fourth_oct_1;
+			}
+			else
+			{
+				next_vis = fourth_oct_3;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
+		// ---------------- fourth octave 3 visualization ----------------- //
+		case fourth_oct_3:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = fourth_oct_4;
+			}
+			else
+			{
+				next_vis = fourth_oct_2;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
+		// ---------------- fourth octave 4 visualization ----------------- //
+		case fourth_oct_4:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = fourth_oct_3;
+			}
+			else
+			{
+				next_vis = fourth_oct_4;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
+		// ---------------- fifth octave 0 visualization ----------------- //
+		case fifth_oct_0:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = fifth_oct_0;
+			}
+			else
+			{
+				next_vis = fifth_oct_1;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
+		// ---------------- fifth octave 1 visualization ----------------- //
+		case fifth_oct_1:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = fifth_oct_0;
+			}
+			else
+			{
+				next_vis = fifth_oct_2;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
+		// ---------------- fifth octave 2 visualization ----------------- //
+		case fifth_oct_2:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = fifth_oct_1;
+			}
+			else
+			{
+				next_vis = fifth_oct_3;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
+		// ---------------- fifth octave 3 visualization ----------------- //
+		case fifth_oct_3:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = fifth_oct_2;
+			}
+			else
+			{
+				next_vis = fifth_oct_4;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
+		// ---------------- fifth octave 4 visualization ----------------- //
+		case fifth_oct_4:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = fifth_oct_3;
+			}
+			else
+			{
+				next_vis = fifth_oct_5;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
+		// ---------------- fifth octave 5 visualization ----------------- //
+		case fifth_oct_5:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = fifth_oct_4;
+			}
+			else
+			{
+				next_vis = fifth_oct_5;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
+		// ---------------- sixth octave 0 visualization ----------------- //
+		case sixth_oct_0:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = sixth_oct_0;
+			}
+			else
+			{
+				next_vis = sixth_oct_1;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
+		// ---------------- sixth octave 1 visualization ----------------- //
+		case sixth_oct_1:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = sixth_oct_0;
+			}
+			else
+			{
+				next_vis = sixth_oct_2;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
+		// ---------------- sixth octave 2 visualization ----------------- //
+		case sixth_oct_2:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = sixth_oct_1;
+			}
+			else
+			{
+				next_vis = sixth_oct_3;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
+		// ---------------- sixth octave 3 visualization ----------------- //
+		case sixth_oct_3:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = sixth_oct_2;
+			}
+			else
+			{
+				next_vis = sixth_oct_4;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
+		// ---------------- sixth octave 4 visualization ----------------- //
+		case sixth_oct_4:
+		if(VISFlag == 1)
+		{
+			if(note == 0.0)
+			{
+				next_vis = sixth_oct_3;
+			}
+			else
+			{
+				next_vis = sixth_oct_3;
+			}
+		}
+		else
+		{
+			next_vis = wait_flag;
+		}
+		break;
 	}
+	
 	switch(next_vis) // State Actions
 	{
 		
