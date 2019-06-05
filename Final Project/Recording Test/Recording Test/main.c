@@ -1,18 +1,18 @@
 #include <avr/io.h>
+
 #include <avr/interrupt.h>
+
 #include <stdlib.h>
+
 #include <avr/eeprom.h>
+
 #include "io.c"
-#include "timer.h"
-#include "scheduler.h"
 
-volatile unsigned char RXFlag = 0;
-unsigned char rec_flag = 0;
-unsigned char start_rec = 0;
-unsigned short addr_val = 0;
-double note;
-volatile unsigned char TimerFlag = 0; // TimerISR() sets this to 1. C programmer should clear to 0.
+#include "usart.h"
 
+
+
+//
 // Fourth (Middle) Octave
 double C4 = 261.63; // middle C
 double D4 = 293.66;
@@ -21,6 +21,29 @@ double F4 = 349.23;
 double G4 = 392.00;
 double A4 = 440.00; // concert pitch
 double B4 = 493.88;
+
+double note = 0.0;
+
+enum recording {unarmed, armed, in_progress, playback} rec_state;
+
+unsigned short rec_tick = 0;
+
+signed short x = 0;  // Value of ADC register now stored in variable x.
+
+enum states {start, wait, play} state;
+
+signed short prev_x = 0;
+
+unsigned char viz_tick = 0; // used to track the vizualizer rise and fall
+
+unsigned char button = 0; // used to track when the button changes
+
+unsigned char rec_flag = 0;
+
+//timer shit
+
+volatile unsigned char TimerFlag = 0; // TimerISR() sets this to 1. C programmer should clear to 0.
+
 
 
 // Internal variables for mapping AVR's ISR to our cleaner TimerISR model.
@@ -233,134 +256,297 @@ void ADC_init() {
 
 }
 
-enum recording{wait_input, recording, playback} rec_state;
-	
-void RxISR() {
-	RXFlag = 1;
-	}
-	
-void tick_recording(unsigned char var)
-{
-	switch(rec_state)
-	{
-		// WAITING TO SEE IF THE USER WANTS TO SAVE
-		case wait_input:
-			if(start_rec == 0x01)		// If the user wants to record
-			{							//
-				rec_state = recording;	// Transition to the set recording state
-				addr_val = 0;			// How long the recording lasts
-			}							//
-			else if(start_rec == 0x02)	// If the user wants to playback
-			{							// 
-				rec_state = playback;	// Transition to the playback state
-			}							//
-			else                        // 
-			{                           //
-				rec_state = wait_input; //	
-			}							//
+
+
+//turn recording on and off
+
+void tickRecord(unsigned char temp) {
+
+	switch(rec_state) {
+
+		case unarmed:
+
+		if (temp == 0x01) {
+			//User wants to record a set of notes
+			rec_state = armed;
+			rec_tick = 0;
+		}
+
+		if (temp == 0x02) { // User wants to playback
+			rec_state = playback;
+		}
+
 		break;
-		
-		// RECORDING STATE
-		case recording:
-			if(addr_val < 250)
-			{
-				// This calls the EEPROM write word function that writes a string to memory
-				eeprom_write_word((uint16_t *)(addr_val * 7), (uint16_t)(note));
-								//	addr_val is the address in memory the value is going to be stored too
-								//	
-				addr_val++;		//	advance the address value to the next location in memory
-			}
-			else
-			{
-				addr_val = 0;
-				rec_state = wait_input;
-			}
+
+		case in_progress:
+			if (rec_tick < 200) 
+				{
+					eeprom_write_word((uint16_t *)(rec_tick*18), (uint16_t)(note));
+					rec_tick++;
+				}
+
+			else 
+				{
+					rec_tick = 0;
+					rec_state = unarmed;
+				}	
 		break;
-		
-		// PLAYBACK STATE
+
 		case playback:
-			if(addr_val < 250)
-			{
-				note = eeprom_read_word((uint16_t *)(addr_val * 7));
-			}
-			else
-			{
-				addr_val = 0;
-				rec_state = wait_input;
-			}
+			if (rec_tick < 200) 
+				{
+					note = eeprom_read_word((uint16_t *)(rec_tick*18));
+					rec_tick++;
+				}
+
+			else 
+				{
+					rec_tick = 0;
+					rec_state = unarmed;
+				}
 		break;
 		
 		default:
-		rec_state = wait_input;
+			rec_state = unarmed;
 		break;
+
 	}
+
+}
+
+//state shit
+
+void tickSM(unsigned char display_counter) {
+	unsigned char tempA;
+	unsigned char tempB;
+	unsigned char tempD = ~PIND & 0x3C;
+	
+	if(	tempD == 0x10 ) 
+	{
+		tempA = 1;
+	}
+	if( tempD == 0x20 )
+	{
+		tempB = 1; 
+	}
+	switch(state) { //transitions
+		case start:
+		state = wait;
+		break;
+
+		case wait:
+		if (tempA == 0x00 && tempB == 0x00) {
+			state = wait;
+		}
+
+		else {
+			state = play;
+		}
+
+		break;
+
+		case play:
+		if (tempA == 0x00 && tempB == 0x00) {
+			state = wait;
+		}
+
+		else {
+			state = play;
+		}
+
+		break;
+		
+		default:
+		state = wait;
+		break;
+
+	}//transitions
+
+	
+
+	switch(state) { //actions
+
+		case start:
+		break;
+
+		case wait:
+		note = 0;
+		button = 0;
+		break;
+
+		case play:
+		if (rec_state == armed) {
+			rec_state = in_progress;
+		}
+		break;
+		
+		default:
+		break;
+
+	}
+
+}
+
+
+void update_LCD() {
+	unsigned char temp_b;
+	switch(rec_state) {
+
+		case armed:
+			temp_b = 0x01;
+		break;
+
+		case in_progress:
+
+			temp_b = 0x02;
+
+		rec_flag = 1;
+
+		break;
+
+		case playback:
+
+			temp_b = 0x03;
+
+		break;
+
+		default:
+
+		if (rec_flag == 1) {
+			rec_flag = 0;
+		}
+
+		break;
+
+	}
+
+	PORTB = temp_b;
+
 }
 int main(void)
+
 {
-    	DDRA = 0x00; PORTA = 0xFF; // Up down key inputs, NOTE: Potential to be Joystick to menu control
-    	DDRB = 0xF0; PORTB = 0x0F; // PB7 is speaker output, 0-7 are piano keys
-    	DDRC = 0xFF; PORTC = 0x00; // LCD data lines
-    	//DDRD = 0xF0; PORTD = 0x0F; // USART receive on D0
-		DDRD = 0xC3; PORTD = 0x3C; // LCD control lines and menu control input
-		// D7 D6 D5 D4 D3 D2 D1 D0
+
+	DDRA = 0x00; PORTA = 0xFF; // potentiometer  inputs
+
+	DDRB = 0xFF; PORTB = 0x00; // PB6 is speaker output, 0-3 are other inputs
+
+	DDRC = 0xFF; PORTC = 0x00; // LCD data lines
+
+	DDRD = 0xF0; PORTD = 0x0F; // LCD control lines on D6 and D7, USART receive on D0
+
+	
+
+	//init stuff
+
+	PWM_on(); 
+
+	TimerSet(20);
+
+	TimerOn();
+
+	
+
+	//usart
+
+	initUSART();
+
+	USART_Flush();
+
+	//init states
+
+	state = start;
+
+	rec_state = unarmed;
+
+	unsigned char i = 0;
+
+	unsigned char bong = 0;
+	unsigned char tempB;
+	while(1) 
+
+
+	{
+
 		
-		//Initialize USART
-		initUSART();
-		USART_Flush(); // clears upon initialization of the program (NOTE in normal operation on same device would not execute
-		
-		unsigned char counter = 0; // counter to update USART 
-		rec_state = wait_input;
-		
-    while (1) 
-    {
 		unsigned char tempB = ~PINA & 0xFF;
 		tempB = tempB >> 1;
-		if(tempB == 0x01)
-		{
-			note = C4; // note 1
-		}
-		else if(tempB == 0x02)
-		{
-			note = D4; // note 2
-		}
-		else if(tempB == 0x04)
-		{
-			note = E4; // note 3
-		}
-		else if(tempB == 0x08)
-		{
-			note = F4;  // note 4
-		}
-		else if(tempB == 0x10)
-		{
-			note = G4;  // note 5
-		}
-		else if(tempB == 0x20)
-		{
-			note = A4;  // note 6
-		}
-		else if(tempB == 0x40)
-		{
-			note = B4;  // note 7
-		}
-		else
-		{
-			note = 0.0;
-		}
+if(tempB == 0x01)
+{
+	note = C4; // note 1
+}
+else if(tempB == 0x02)
+{
+	note = D4; // note 2
+}
+else if(tempB == 0x04)
+{
+	note = E4; // note 3
+}
+else if(tempB == 0x08)
+{
+	note = F4;  // note 4
+}
+else if(tempB == 0x10)
+{
+	note = G4;  // note 5
+}
+else if(tempB == 0x20)
+{
+	note = A4;  // note 6
+}
+else if(tempB == 0x40)
+{
+	note = B4;  // note 7
+}
+else
+{
+	note = 0.0;
+}
+break;
+			if (USART_HasReceived()) {
+
+				USART_Flush();
+
+			}
+
+			else {
+
+					bong = USART_Receive();
+
+
+			}
+
+			
+
+		tickSM(i);
+
+		tickRecord(bong);
+
+			if (i == 4) {	//only update LCD every 80 ms, looks bad otherwise
+
+
+
+				update_LCD();
+
+				i = 0;
+
+			}
+
+			else {
+
+				i++;
+
+			}
 		
-		if(USART_HasReceived()) // If the last transmission of data is good, clear the data register for the next transmission
-		{
-			USART_Flush();
-		}
-		else
-		{
-			counter = USART_Receive(); 
-		}
 		
-		tick_recording(counter);
+
 		set_PWM(note);
-		while(!TimerFlag);
-		
+
+		while (!TimerFlag);
+
 		TimerFlag = 0;
-    }
+
+	}
+
 }

@@ -134,11 +134,11 @@ unsigned char top_bar[] = { 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};	// 
 
 // ----------------------------------------------------------------------------------------------------------------------- //
 // ----------------------------------------------- MENU DEFINITIONS ------------------------------------------------------ //
-const unsigned char menu_top[15] = {' ','O','C','T','A','V','E',' ','R','E','C','O','R','D',' ',' '};
+const unsigned char menu_top[15] = {' ','O','C','T','A','V','E',' ','R','E','C','O','R','D',' '};
 	// ----------------------------- 1   2   3   4   5   6   7   8   9   10  11  12  13  14  15 -------------------------- //
-const unsigned char menu_bot[15] = {' ','P','L','A','Y',' ','V','I','S','U','A','L','I','Z','E',' '};
+const unsigned char menu_bot[15] = {' ','P','L','A','Y',' ','V','I','S','U','A','L','I','Z','E'};
 	// ----------------------------- 1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16  --------------------- //
-const unsigned char menu_octave[15] = {' ','1',' ','2',' ','3',' ','4',' ','5',' ','6',' ','7',' ',' '};
+const unsigned char menu_octave[15] = {' ','1',' ','2',' ','3',' ','4',' ','5',' ','6',' ','7',' '};
 	// -------------------------------- 1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16 ------------------- //
 	
 unsigned char button_left = 0x00;	// to record if the user wants to go left on the menu
@@ -149,6 +149,7 @@ unsigned char blink = 0x00;			// Blink the selection indicator
 
 unsigned char RXFlag = 0;	// record flag to prevent other actions
 unsigned char OCTFlag = 0;  // octave flag to prevent other actions
+unsigned char PYFlag = 0;  // playback flag to prevent other actions
 unsigned char VISFlag = 0;  // vis flag to prevent other actions
 unsigned char cursor_loc = 1; // position of the cursor on the LCD
 unsigned char update_screen = 1; // Weather of not the LCD should be updated
@@ -159,14 +160,17 @@ double note;     // frequency to be output to the speaker
 
 enum PIANO {init, first_octave, second_octave, thrid_octave, fourth_octave, fifth_octave, sixth_octave, seventh_octave};
 enum LCD_MENU{init_menu, change_octave, select_octave, visualization, select_vis, record, select_record, play, select_play};
-enum LCD_VIS{init_vis, wait_flag, 
-	first_oct_0, first_oct_1, 
-	sec_oct_0, sec_oct_1, sec_oct_2, 
-	thrid_oct_0, thrid_oct_1, thrid_oct_2, thrid_oct_3, 
-	fourth_oct_0, fourth_oct_1, fourth_oct_2, fourth_oct_3, fourth_oct_4,
-	fifth_oct_0, fifth_oct_1, fifth_oct_2, fifth_oct_3, fifth_oct_4, fifth_oct_5,
-	sixth_oct_0, sixth_oct_1, sixth_oct_2, sixth_oct_3, sixth_oct_4, sixth_oct_5, sixth_oct_6,
-	sev_oct_0, sev_oct_1, sev_oct_2, sev_oct_3, sev_oct_4, sev_oct_5, sev_oct_6, sev_oct_7};
+enum OCT_MENU{init_oct, wait_oflag, oct_1, oct_2, oct_3, oct_4, oct_5, oct_6, oct_7};
+enum REC_MENU{init_rec, wait_rxflag, record};
+enum PLAY_MENU{init_play, wait_pyflag, playback};
+enum LCD_VIS{init_vis, wait_flag, note_0, 
+	note_C_1, note_C_2, note_C_3, note_C_4, note_C_5, note_C_6, note_C_7,
+	note_D_1, note_D_2, note_D_3, note_D_4, note_D_5, note_D_6, note_D_7,
+	note_E_1, note_E_2, note_E_3, note_E_4, note_E_5, note_E_6, note_E_7,
+	note_F_1, note_F_2, note_F_3, note_F_4, note_F_5, note_F_6, note_F_7,
+	note_G_1, note_G_2, note_G_3, note_G_4, note_G_5, note_G_6, note_G_7,
+	note_A_1, note_A_2, note_A_3, note_A_4, note_A_5, note_A_6, note_A_7,
+	note_B_1, note_B_2, note_B_3, note_B_4, note_B_5, note_B_6, note_B_7};
 
 int piano_tick(int next_octave) {
 	
@@ -705,55 +709,52 @@ int Vis_tick(int next_vis)
 		case wait_flag:
 			if(VISFlag == 1)
 				{
-					if(Octave == 0x01) // CONDITIONALS TO GO TO THE CURRENT OCTAVE
-						{
-							next_vis = first_oct_1;
-						}
-					else if(Octave == 0x02)
-						{
-							next_vis = sec_oct_1;
-						}
-					else if(Octave == 0x03)
-						{
-							next_vis = thrid_oct_1;
-						}
-					else if(Octave == 0x04)
-						{
-							next_vis = fourth_oct_1;
-						}
-					else if(Octave == 0x05)
-						{
-							next_vis = fifth_oct_1;
-						}
-					else if(Octave == 0x06)
-						{
-							next_vis = sixth_oct_1;
-						}
-					else if(Octave == 0x07)	
-						{
-							next_vis = sev_oct_1;
-						}
-					else // Should never occur
-						{
-							next_vis = wait_flag 
-						}
+					next_vis = note_0;
 				}
 			else  // otherwise wait for the flag to be set
 				{
 					next_vis = wait_flag;
 				}
 		break;
-		// ---------------- first octave 0 visualization ----------------- //
-		case first_oct_0:
+		// ---------------- No note being played ----------------- //
+		case note_0:
 			if(VISFlag == 1)
 			{
 				if(note == 0.0)
 				{
-					next_vis = first_oct_0;
+					next_vis = note_0;
+				}
+				else if(note == C1 || note == C2 || note == C3 || note == C4 || note == C5 || note == C6 || note == C7)
+				{
+					next_vis = note_C_1;
+				}
+				else if(note == D1 || note == D2 || note == D3 || note == D4 || note == D5 || note == D6 || note == D7)
+				{
+					next_vis = note_D_1;
+				}
+				else if(note == E1 || note == E2 || note == E3 || note == E4 || note == E5 || note == E6 || note == E7)
+				{
+					next_vis = note_E_1;
+				}
+				else if(note == F1 || note == F2 || note == F3 || note == F4 || note == F5 || note == F6 || note == F7)
+				{
+					next_vis = note_F_1;
+				}
+				else if(note == G1 || note == G2 || note == G3 || note == G4 || note == G5 || note == G6 || note == G7)
+				{
+					next_vis = note_G_1;
+				}
+				else if(note == A1 || note == A2 || note == A3 || note == A4 || note == A5 || note == A6 || note == A7)
+				{
+					next_vis = note_A_1;
+				}
+				else if(note == B1 || note == B2 || note == B3 || note == B4 || note == B5 || note == B6 || note == B7)
+				{
+					next_vis = note_B_1;
 				}
 				else
 				{
-					next_vis = first_oct_1;
+					next_vis = note_0;
 				}
 			}
 			else
@@ -761,35 +762,22 @@ int Vis_tick(int next_vis)
 				next_vis = wait_flag;
 			}
 		break;
-		// ---------------- first octave 1 visualization ----------------- //
-		case first_oct_1:
-			if(VISFlag == 1)
-			{
-				if(note == 0.0)
-				{
-					next_vis = first_oct_0;
-				}
-				else
-				{
-					next_vis = first_oct_1;
-				}
-			}
-			else
-			{
-				next_vis = wait_flag;
-			}
-		break;
-		// ---------------- second octave 0 visualization ----------------- //
-		case sec_oct_0:
+		
+		// ---------------- first C visualization ----------------- //
+		case note_C_1:
 		if(VISFlag == 1)
 		{
-			if(note == 0.0)
+			if(note == C2 || note == C3 || note == C4 || note == C5 || note == C6 || note == C7)
 			{
-				next_vis = sec_oct_0;
+				next_vis = note_C_2;
+			}
+			else if(note == C1)
+			{
+				next_vis = note_C_1;
 			}
 			else
 			{
-				next_vis = sec_oct_1;
+				next_vis = note_0;
 			}
 		}
 		else
@@ -797,17 +785,21 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
-		// ---------------- second octave 1 visualization ----------------- //
-		case sec_oct_1:
+		// ---------------- second C visualization ----------------- //
+		case note_C_2:
 		if(VISFlag == 1)
 		{
-			if(note == 0.0)
+			if(note == C3 || note == C4 || note == C5 || note == C6 || note == C7)
 			{
-				next_vis = sec_oct_0;
+				next_vis = note_C_3;
+			}
+			else if(note == C2)
+			{
+				next_vis = note_C_2;
 			}
 			else
 			{
-				next_vis = sec_oct_2;
+				next_vis = note_C_1;
 			}
 		}
 		else
@@ -815,17 +807,21 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
-		// ---------------- second octave 2 visualization ----------------- //
-		case sec_oct_2:
+		// ---------------- third C visualization ----------------- //
+		case note_C_3:
 		if(VISFlag == 1)
 		{
-			if(note == 0.0)
+			if(note == C4 || note == C5 || note == C6 || note == C7)
 			{
-				next_vis = sec_oct_1;
+				next_vis = note_C_4;
+			}
+			else if(note == C3)
+			{
+				next_vis = note_C_3;
 			}
 			else
 			{
-				next_vis = sec_oct_2;
+				next_vis = note_C_2;
 			}
 		}
 		else
@@ -833,17 +829,21 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
-		// ---------------- third octave 0 visualization ----------------- //
-		case thrid_oct_0:
+		// ---------------- fourth C visualization ----------------- //
+		case note_C_4:
 		if(VISFlag == 1)
 		{
-			if(note == 0.0)
+			if(note == C5 || note == C6 || note == C7)
 			{
-				next_vis = thrid_oct_0;
+				next_vis = note_C_5;
+			}
+			else if(note == C4)
+			{
+				next_vis = note_C_4;
 			}
 			else
 			{
-				next_vis = thrid_oct_1;
+				next_vis = note_C_3;
 			}
 		}
 		else
@@ -851,17 +851,21 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
-		// ---------------- third octave 1 visualization ----------------- //
-		case thrid_oct_1:
+		// ---------------- fifth C visualization ----------------- //
+		case note_C_5:
 		if(VISFlag == 1)
 		{
-			if(note == 0.0)
+			if(note == C6 || note == C7)
 			{
-				next_vis = thrid_oct_0;
+				next_vis = note_C_6;
+			}
+			else if(note == C5)
+			{
+				next_vis = note_C_5;
 			}
 			else
 			{
-				next_vis = thrid_oct_2;
+				next_vis = note_C_4;
 			}
 		}
 		else
@@ -869,17 +873,21 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
-		// ---------------- third octave 2 visualization ----------------- //
-		case thrid_oct_2:
+		// ---------------- sixth C visualization ----------------- //
+		case note_C_6:
 		if(VISFlag == 1)
 		{
-			if(note == 0.0)
+			if(note == C7)
 			{
-				next_vis = thrid_oct_3;
+				next_vis = note_C_7;
+			}
+			else if(note == C6)
+			{
+				next_vis = note_C_6;
 			}
 			else
 			{
-				next_vis = thrid_oct_1;
+				next_vis = note_C_5;
 			}
 		}
 		else
@@ -887,17 +895,17 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
-		// ---------------- third octave 3 visualization ----------------- //
-		case thrid_oct_3:
+		// ---------------- seventh C visualization ----------------- //
+		case note_C_7:
 		if(VISFlag == 1)
 		{
-			if(note == 0.0)
+			if(note == C7)
 			{
-				next_vis = thrid_oct_2;
+				next_vis = note_C_7;
 			}
 			else
 			{
-				next_vis = thrid_oct_3;
+				next_vis = note_C_6;
 			}
 		}
 		else
@@ -905,17 +913,24 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
-		// ---------------- fourth octave 0 visualization ----------------- //
-		case fourth_oct_0:
+		
+		// -----------------------------------------------------------------------------------------------------------//
+		
+		// ---------------- first D visualization ----------------- //
+		case note_D_1:
 		if(VISFlag == 1)
 		{
-			if(note == 0.0)
+			if(note == D2 || note == D3 || note == D4 || note == D5 || note == D6 || note == D7)
 			{
-				next_vis = fourth_oct_0;
+				next_vis = note_D_2;
+			}
+			else if(note == D1)
+			{
+				next_vis = note_D_1;
 			}
 			else
 			{
-				next_vis = fourth_oct_1;
+				next_vis = note_0;
 			}
 		}
 		else
@@ -923,17 +938,21 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
-		// ---------------- fourth octave 1 visualization ----------------- //
-		case fourth_oct_1:
+		// ---------------- second D visualization ----------------- //
+		case note_D_2:
 		if(VISFlag == 1)
 		{
-			if(note == 0.0)
+			if(note == D3 || note == D4 || note == D5 || note == D6 || note == D7)
 			{
-				next_vis = fourth_oct_0;
+				next_vis = note_D_3;
+			}
+			else if(note == D2)
+			{
+				next_vis = note_D_2;
 			}
 			else
 			{
-				next_vis = fourth_oct_2;
+				next_vis = note_D_1;
 			}
 		}
 		else
@@ -941,17 +960,21 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
-		// ---------------- fourth octave 2 visualization ----------------- //
-		case fourth_oct_2:
+		// ---------------- third D visualization ----------------- //
+		case note_D_3:
 		if(VISFlag == 1)
 		{
-			if(note == 0.0)
+			if(note == D4 || note == D5 || note == D6 || note == D7)
 			{
-				next_vis = fourth_oct_1;
+				next_vis = note_D_4;
+			}
+			else if(note == D3)
+			{
+				next_vis = note_D_3;
 			}
 			else
 			{
-				next_vis = fourth_oct_3;
+				next_vis = note_D_2;
 			}
 		}
 		else
@@ -959,17 +982,21 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
-		// ---------------- fourth octave 3 visualization ----------------- //
-		case fourth_oct_3:
+		// ---------------- fourth D visualization ----------------- //
+		case note_D_4:
 		if(VISFlag == 1)
 		{
-			if(note == 0.0)
+			if(note == D5 || note == D6 || note == D7)
 			{
-				next_vis = fourth_oct_4;
+				next_vis = note_D_5;
+			}
+			else if(note == D4)
+			{
+				next_vis = note_D_4;
 			}
 			else
 			{
-				next_vis = fourth_oct_2;
+				next_vis = note_D_3;
 			}
 		}
 		else
@@ -977,17 +1004,21 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
-		// ---------------- fourth octave 4 visualization ----------------- //
-		case fourth_oct_4:
+		// ---------------- fifth D visualization ----------------- //
+		case note_D_5:
 		if(VISFlag == 1)
 		{
-			if(note == 0.0)
+			if(note == D6 || note == D7)
 			{
-				next_vis = fourth_oct_3;
+				next_vis = note_D_6;
+			}
+			else if(note == D5)
+			{
+				next_vis = note_D_5;
 			}
 			else
 			{
-				next_vis = fourth_oct_4;
+				next_vis = note_D_4;
 			}
 		}
 		else
@@ -995,17 +1026,21 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
-		// ---------------- fifth octave 0 visualization ----------------- //
-		case fifth_oct_0:
+		// ---------------- sixth D visualization ----------------- //
+		case note_D_6:
 		if(VISFlag == 1)
 		{
-			if(note == 0.0)
+			if(note == D7)
 			{
-				next_vis = fifth_oct_0;
+				next_vis = note_D_7;
+			}
+			else if(note == D6)
+			{
+				next_vis = note_D_6;
 			}
 			else
 			{
-				next_vis = fifth_oct_1;
+				next_vis = note_D_5;
 			}
 		}
 		else
@@ -1013,17 +1048,17 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
-		// ---------------- fifth octave 1 visualization ----------------- //
-		case fifth_oct_1:
+		// ---------------- seventh D visualization ----------------- //
+		case note_D_7:
 		if(VISFlag == 1)
 		{
-			if(note == 0.0)
+			if(note == D7)
 			{
-				next_vis = fifth_oct_0;
+				next_vis = note_D_7;
 			}
 			else
 			{
-				next_vis = fifth_oct_2;
+				next_vis = note_D_6;
 			}
 		}
 		else
@@ -1031,17 +1066,22 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
-		// ---------------- fifth octave 2 visualization ----------------- //
-		case fifth_oct_2:
+		// -------------------------------------------------------------------------------------------------- //
+		// ---------------- first E visualization ----------------- //
+		case note_E_1:
 		if(VISFlag == 1)
 		{
-			if(note == 0.0)
+			if(note == E2 || note == E3 || note == E4 || note == E5 || note == E6 || note == E7)
 			{
-				next_vis = fifth_oct_1;
+				next_vis = note_E_2;
+			}
+			else if(note == E1)
+			{
+				next_vis = note_E_1;
 			}
 			else
 			{
-				next_vis = fifth_oct_3;
+				next_vis = note_0;
 			}
 		}
 		else
@@ -1049,17 +1089,21 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
-		// ---------------- fifth octave 3 visualization ----------------- //
-		case fifth_oct_3:
+		// ---------------- second E visualization ----------------- //
+		case note_E_2:
 		if(VISFlag == 1)
 		{
-			if(note == 0.0)
+			if(note == E3 || note == E4 || note == E5 || note == E6 || note == E7)
 			{
-				next_vis = fifth_oct_2;
+				next_vis = note_E_3;
+			}
+			else if(note == E2)
+			{
+				next_vis = note_E_2;
 			}
 			else
 			{
-				next_vis = fifth_oct_4;
+				next_vis = note_E_1;
 			}
 		}
 		else
@@ -1067,17 +1111,21 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
-		// ---------------- fifth octave 4 visualization ----------------- //
-		case fifth_oct_4:
+		// ---------------- third E visualization ----------------- //
+		case note_E_3:
 		if(VISFlag == 1)
 		{
-			if(note == 0.0)
+			if(note == E4 || note == E5 || note == E6 || note == E7)
 			{
-				next_vis = fifth_oct_3;
+				next_vis = note_E_4;
+			}
+			else if(note == E3)
+			{
+				next_vis = note_E_3;
 			}
 			else
 			{
-				next_vis = fifth_oct_5;
+				next_vis = note_E_2;
 			}
 		}
 		else
@@ -1085,17 +1133,21 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
-		// ---------------- fifth octave 5 visualization ----------------- //
-		case fifth_oct_5:
+		// ---------------- fourth E visualization ----------------- //
+		case note_E_4:
 		if(VISFlag == 1)
 		{
-			if(note == 0.0)
+			if(note == E5 || note == E6 || note == E7)
 			{
-				next_vis = fifth_oct_4;
+				next_vis = note_E_5;
+			}
+			else if(note == E4)
+			{
+				next_vis = note_E_4;
 			}
 			else
 			{
-				next_vis = fifth_oct_5;
+				next_vis = note_E_3;
 			}
 		}
 		else
@@ -1103,17 +1155,21 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
-		// ---------------- sixth octave 0 visualization ----------------- //
-		case sixth_oct_0:
+		// ---------------- fifth E visualization ----------------- //
+		case note_E_5:
 		if(VISFlag == 1)
 		{
-			if(note == 0.0)
+			if(note == E6 || note == E7)
 			{
-				next_vis = sixth_oct_0;
+				next_vis = note_E_6;
+			}
+			else if(note == E5)
+			{
+				next_vis = note_E_5;
 			}
 			else
 			{
-				next_vis = sixth_oct_1;
+				next_vis = note_E_4;
 			}
 		}
 		else
@@ -1121,17 +1177,21 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
-		// ---------------- sixth octave 1 visualization ----------------- //
-		case sixth_oct_1:
+		// ---------------- sixth E visualization ----------------- //
+		case note_E_6:
 		if(VISFlag == 1)
 		{
-			if(note == 0.0)
+			if(note == E7)
 			{
-				next_vis = sixth_oct_0;
+				next_vis = note_E_7;
+			}
+			else if(note == E6)
+			{
+				next_vis = note_E_6;
 			}
 			else
 			{
-				next_vis = sixth_oct_2;
+				next_vis = note_E_5;
 			}
 		}
 		else
@@ -1139,17 +1199,17 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
-		// ---------------- sixth octave 2 visualization ----------------- //
-		case sixth_oct_2:
+		// ---------------- seventh E visualization ----------------- //
+		case note_E_7:
 		if(VISFlag == 1)
 		{
-			if(note == 0.0)
+			if(note == E7)
 			{
-				next_vis = sixth_oct_1;
+				next_vis = note_E_7;
 			}
 			else
 			{
-				next_vis = sixth_oct_3;
+				next_vis = note_E_6;
 			}
 		}
 		else
@@ -1157,47 +1217,1240 @@ int Vis_tick(int next_vis)
 			next_vis = wait_flag;
 		}
 		break;
-		// ---------------- sixth octave 3 visualization ----------------- //
-		case sixth_oct_3:
-		if(VISFlag == 1)
+		
+	//----------------------------------------------------------------------------------------------------------//
+	// ---------------- first F visualization ----------------- //
+	case note_F_1:
+	if(VISFlag == 1)
+	{
+		if(note == F2 || note == F3 || note == F4 || note == F5 || note == F6 || note == F7)
 		{
-			if(note == 0.0)
-			{
-				next_vis = sixth_oct_2;
-			}
-			else
-			{
-				next_vis = sixth_oct_4;
-			}
+			next_vis = note_F_2;
+		}
+		else if(note == F1)
+		{
+			next_vis = note_F_1;
 		}
 		else
 		{
-			next_vis = wait_flag;
+			next_vis = note_0;
 		}
-		break;
-		// ---------------- sixth octave 4 visualization ----------------- //
-		case sixth_oct_4:
-		if(VISFlag == 1)
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- second F visualization ----------------- //
+	case note_F_2:
+	if(VISFlag == 1)
+	{
+		if(note == F3 || note == F4 || note == F5 || note == F6 || note == F7)
 		{
-			if(note == 0.0)
-			{
-				next_vis = sixth_oct_3;
-			}
-			else
-			{
-				next_vis = sixth_oct_3;
-			}
+			next_vis = note_F_3;
+		}
+		else if(note == F2)
+		{
+			next_vis = note_F_2;
 		}
 		else
 		{
-			next_vis = wait_flag;
+			next_vis = note_F_1;
 		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- third F visualization ----------------- //
+	case note_F_3:
+	if(VISFlag == 1)
+	{
+		if(note == F4 || note == F5 || note == F6 || note == F7)
+		{
+			next_vis = note_F_4;
+		}
+		else if(note == F3)
+		{
+			next_vis = note_F_3;
+		}
+		else
+		{
+			next_vis = note_F_2;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- fourth F visualization ----------------- //
+	case note_F_4:
+	if(VISFlag == 1)
+	{
+		if(note == F5 || note == F6 || note == F7)
+		{
+			next_vis = note_F_5;
+		}
+		else if(note == F4)
+		{
+			next_vis = note_F_4;
+		}
+		else
+		{
+			next_vis = note_F_3;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- fifth F visualization ----------------- //
+	case note_F_5:
+	if(VISFlag == 1)
+	{
+		if(note == F6 || note == F7)
+		{
+			next_vis = note_F_6;
+		}
+		else if(note == F5)
+		{
+			next_vis = note_F_5;
+		}
+		else
+		{
+			next_vis = note_F_4;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- sixth F visualization ----------------- //
+	case note_F_6:
+	if(VISFlag == 1)
+	{
+		if(note == F7)
+		{
+			next_vis = note_F_7;
+		}
+		else if(note == F6)
+		{
+			next_vis = note_F_6;
+		}
+		else
+		{
+			next_vis = note_F_5;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- seventh F visualization ----------------- //
+	case note_F_7:
+	if(VISFlag == 1)
+	{
+		if(note == F7)
+		{
+			next_vis = note_F_7;
+		}
+		else
+		{
+			next_vis = note_F_6;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// -------------------------------------------------------------------------------------
+	// ---------------- first G visualization ----------------- //
+	case note_G_1:
+	if(VISFlag == 1)
+	{
+		if(note == G2 || note == G3 || note == G4 || note == G5 || note == G6 || note == G7)
+		{
+			next_vis = note_G_2;
+		}
+		else if(note == G1)
+		{
+			next_vis = note_G_1;
+		}
+		else
+		{
+			next_vis = note_0;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- second G visualization ----------------- //
+	case note_G_2:
+	if(VISFlag == 1)
+	{
+		if(note == G3 || note == G4 || note == G5 || note == G6 || note == G7)
+		{
+			next_vis = note_G_3;
+		}
+		else if(note == G2)
+		{
+			next_vis = note_G_2;
+		}
+		else
+		{
+			next_vis = note_G_1;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- third G visualization ----------------- //
+	case note_G_3:
+	if(VISFlag == 1)
+	{
+		if(note == G4 || note == G5 || note == G6 || note == G7)
+		{
+			next_vis = note_G_4;
+		}
+		else if(note == G3)
+		{
+			next_vis = note_G_3;
+		}
+		else
+		{
+			next_vis = note_G_2;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- fourth G visualization ----------------- //
+	case note_G_4:
+	if(VISFlag == 1)
+	{
+		if(note == G5 || note == G6 || note == G7)
+		{
+			next_vis = note_G_5;
+		}
+		else if(note == G4)
+		{
+			next_vis = note_G_4;
+		}
+		else
+		{
+			next_vis = note_G_3;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- fifth G visualization ----------------- //
+	case note_G_5:
+	if(VISFlag == 1)
+	{
+		if(note == G6 || note == G7)
+		{
+			next_vis = note_G_6;
+		}
+		else if(note == G5)
+		{
+			next_vis = note_G_5;
+		}
+		else
+		{
+			next_vis = note_G_4;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- sixth G visualization ----------------- //
+	case note_G_6:
+	if(VISFlag == 1)
+	{
+		if(note == G7)
+		{
+			next_vis = note_G_7;
+		}
+		else if(note == G6)
+		{
+			next_vis = note_G_6;
+		}
+		else
+		{
+			next_vis = note_G_5;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- seventh G visualization ----------------- //
+	case note_G_7:
+	if(VISFlag == 1)
+	{
+		if(note == G7)
+		{
+			next_vis = note_G_7;
+		}
+		else
+		{
+			next_vis = note_G_6;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ------------------------------------------------------------------------------------------------------------- // 
+	// ---------------- first A visualization ----------------- //
+	case note_A_1:
+	if(VISFlag == 1)
+	{
+		if(note == A2 || note == A3 || note == A4 || note == A5 || note == A6 || note == A7)
+		{
+			next_vis = note_A_2;
+		}
+		else if(note == A1)
+		{
+			next_vis = note_A_1;
+		}
+		else
+		{
+			next_vis = note_0;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- second A visualization ----------------- //
+	case note_A_2:
+	if(VISFlag == 1)
+	{
+		if(note == A3 || note == A4 || note == A5 || note == A6 || note == A7)
+		{
+			next_vis = note_A_3;
+		}
+		else if(note == A2)
+		{
+			next_vis = note_A_2;
+		}
+		else
+		{
+			next_vis = note_A_1;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- third A visualization ----------------- //
+	case note_A_3:
+	if(VISFlag == 1)
+	{
+		if(note == A4 || note == A5 || note == A6 || note == A7)
+		{
+			next_vis = note_A_4;
+		}
+		else if(note == A3)
+		{
+			next_vis = note_A_3;
+		}
+		else
+		{
+			next_vis = note_A_2;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- fourth A visualization ----------------- //
+	case note_A_4:
+	if(VISFlag == 1)
+	{
+		if(note == A5 || note == A6 || note == A7)
+		{
+			next_vis = note_A_5;
+		}
+		else if(note == A4)
+		{
+			next_vis = note_A_4;
+		}
+		else
+		{
+			next_vis = note_A_3;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- fifth A visualization ----------------- //
+	case note_A_5:
+	if(VISFlag == 1)
+	{
+		if(note == A6 || note == A7)
+		{
+			next_vis = note_A_6;
+		}
+		else if(note == A5)
+		{
+			next_vis = note_A_5;
+		}
+		else
+		{
+			next_vis = note_A_4;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- sixth A visualization ----------------- //
+	case note_A_6:
+	if(VISFlag == 1)
+	{
+		if(note == A7)
+		{
+			next_vis = note_A_7;
+		}
+		else if(note == A6)
+		{
+			next_vis = note_A_6;
+		}
+		else
+		{
+			next_vis = note_A_5;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- seventh A visualization ----------------- //
+	case note_A_7:
+	if(VISFlag == 1)
+	{
+		if(note == A7)
+		{
+			next_vis = note_A_7;
+		}
+		else
+		{
+			next_vis = note_A_6;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	
+	// ---------------- first B visualization ----------------- //
+	case note_B_1:
+	if(VISFlag == 1)
+	{
+		if(note == B2 || note == B3 || note == B4 || note == B5 || note == B6 || note == B7)
+		{
+			next_vis = note_B_2;
+		}
+		else if(note == B1)
+		{
+			next_vis = note_B_1;
+		}
+		else
+		{
+			next_vis = note_0;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- second B visualization ----------------- //
+	case note_B_2:
+	if(VISFlag == 1)
+	{
+		if(note == B3 || note == B4 || note == B5 || note == B6 || note == B7)
+		{
+			next_vis = note_B_3;
+		}
+		else if(note == B2)
+		{
+			next_vis = note_B_2;
+		}
+		else
+		{
+			next_vis = note_B_1;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- third B visualization ----------------- //
+	case note_B_3:
+	if(VISFlag == 1)
+	{
+		if(note == B4 || note == B5 || note == B6 || note == B7)
+		{
+			next_vis = note_B_4;
+		}
+		else if(note == B3)
+		{
+			next_vis = note_B_3;
+		}
+		else
+		{
+			next_vis = note_B_2;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- fourth B visualization ----------------- //
+	case note_B_4:
+	if(VISFlag == 1)
+	{
+		if(note == B5 || note == B6 || note == B7)
+		{
+			next_vis = note_B_5;
+		}
+		else if(note == B4)
+		{
+			next_vis = note_B_4;
+		}
+		else
+		{
+			next_vis = note_B_3;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- fifth B visualization ----------------- //
+	case note_B_5:
+	if(VISFlag == 1)
+	{
+		if(note == B6 || note == B7)
+		{
+			next_vis = note_B_6;
+		}
+		else if(note == B5)
+		{
+			next_vis = note_B_5;
+		}
+		else
+		{
+			next_vis = note_B_4;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- sixth B visualization ----------------- //
+	case note_B_6:
+	if(VISFlag == 1)
+	{
+		if(note == B7)
+		{
+			next_vis = note_B_7;
+		}
+		else if(note == B6)
+		{
+			next_vis = note_B_6;
+		}
+		else
+		{
+			next_vis = note_B_5;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+	// ---------------- seventh B visualization ----------------- //
+	case note_B_7:
+	if(VISFlag == 1)
+	{
+		if(note == B7)
+		{
+			next_vis = note_B_7;
+		}
+		else
+		{
+			next_vis = note_B_6;
+		}
+	}
+	else
+	{
+		next_vis = wait_flag;
+	}
+	break;
+		default:
 		break;
 	}
 	
 	switch(next_vis) // State Actions
 	{
+		case init_vis:
+		break;
 		
+		case wait_flag:
+		break;
+		
+		case note_0:
+		LCD_ClearScreen();
+		break;
+		
+		// -------------------------------------------------------------------------- //
+		
+		case note_C_1:
+		LCD_Cursor(17);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_C_2:
+		LCD_Cursor(17);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_C_3:
+		LCD_Cursor(17);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_C_4:
+		LCD_Cursor(17);
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_C_5:
+		LCD_Cursor(17);
+		LCD_WriteData(5);
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break; 
+		
+		case note_C_6:
+		LCD_Cursor(17);
+		LCD_WriteData(6);
+		LCD_WriteData(5);
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_C_7:
+		LCD_Cursor(17);
+		LCD_WriteData(7);
+		LCD_WriteData(6);
+		LCD_WriteData(6);
+		LCD_WriteData(5);
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(2);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		// ---------------------------------------------------------------------------------- // 
+		
+		case note_D_1:
+		LCD_Cursor(18);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_D_2:
+		LCD_Cursor(18);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_D_3:
+		LCD_Cursor(17);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_D_4:
+		LCD_Cursor(17);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_D_5:
+		LCD_Cursor(17);
+		LCD_WriteData(3);
+		LCD_WriteData(4);
+		LCD_WriteData(5);
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_D_6:
+		LCD_Cursor(17);
+		LCD_WriteData(4);
+		LCD_WriteData(5);
+		LCD_WriteData(6);
+		LCD_WriteData(5);
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_D_7:
+		LCD_Cursor(17);
+		LCD_WriteData(5);
+		LCD_WriteData(6);
+		LCD_WriteData(7);
+		LCD_WriteData(6);
+		LCD_WriteData(5);
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		// ---------------------------------------------------------------------------------- //
+		
+		case note_E_1:
+		LCD_Cursor(21);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_E_2:
+		LCD_Cursor(21);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_E_3:
+		LCD_Cursor(20);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_E_4:
+		LCD_Cursor(19);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_E_5:
+		LCD_Cursor(17);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(4);
+		LCD_WriteData(5);
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_E_6:
+		LCD_Cursor(17);
+		LCD_WriteData(2);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(4);
+		LCD_WriteData(5);  
+		LCD_WriteData(6); // 22
+		LCD_WriteData(5); 
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_E_7:
+		LCD_Cursor(17);
+		LCD_WriteData(3);
+		LCD_WriteData(3);
+		LCD_WriteData(4);
+		LCD_WriteData(5);
+		LCD_WriteData(6);
+		LCD_WriteData(7);
+		LCD_WriteData(6);
+		LCD_WriteData(5);
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		// ---------------------------------------------------------------------------------- //
+		
+		case note_F_1:
+		LCD_Cursor(23);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_F_2:
+		LCD_Cursor(23);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_F_3:
+		LCD_Cursor(22);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_F_4:
+		LCD_Cursor(21);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_F_5:
+		LCD_Cursor(19);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(4);
+		LCD_WriteData(5);
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_F_6:
+		LCD_Cursor(17);
+		LCD_WriteData(1); // 17
+		LCD_WriteData(1);
+		LCD_WriteData(2); // 19
+		LCD_WriteData(2);
+		LCD_WriteData(3); // 21
+		LCD_WriteData(4);
+		LCD_WriteData(5); // 23
+		LCD_WriteData(6); 
+		LCD_WriteData(5); // 25
+		LCD_WriteData(4);
+		LCD_WriteData(3); // 27
+		LCD_WriteData(2);
+		LCD_WriteData(2); // 29
+		LCD_WriteData(1);
+		LCD_WriteData(1); // 31
+		LCD_Cursor(0);
+		break;
+		
+		case note_F_7:
+		LCD_Cursor(17);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(3);
+		LCD_WriteData(4);
+		LCD_WriteData(5);
+		LCD_WriteData(6);
+		LCD_WriteData(7); // 24
+		LCD_WriteData(6);
+		LCD_WriteData(5);
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		// ---------------------------------------------------------------------------------- //
+		
+		case note_G_1:
+		LCD_Cursor(25);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_G_2:
+		LCD_Cursor(25);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_G_3:
+		LCD_Cursor(24);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_G_4:
+		LCD_Cursor(23);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_G_5:
+		LCD_Cursor(21);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(4);
+		LCD_WriteData(5);
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_G_6:
+		LCD_Cursor(19);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(4);
+		LCD_WriteData(5);
+		LCD_WriteData(6); // 26
+		LCD_WriteData(5);
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_G_7:
+		LCD_Cursor(17);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(3);
+		LCD_WriteData(4);
+		LCD_WriteData(5);
+		LCD_WriteData(6);
+		LCD_WriteData(7);
+		LCD_WriteData(6);
+		LCD_WriteData(5);
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_Cursor(0);
+		break;
+		
+		// ---------------------------------------------------------------------------------- //
+		
+		case note_A_1:
+		LCD_Cursor(28);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_A_2:
+		LCD_Cursor(28);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_A_3:
+		LCD_Cursor(27);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_A_4:
+		LCD_Cursor(26);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_A_5:
+		LCD_Cursor(24);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(4);
+		LCD_WriteData(5); // 29
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_WriteData(2);
+		LCD_Cursor(0);
+		break;
+		
+		case note_A_6:
+		LCD_Cursor(22);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(4);
+		LCD_WriteData(5);
+		LCD_WriteData(6); // 29
+		LCD_WriteData(5);
+		LCD_WriteData(4);
+		LCD_WriteData(3);
+		LCD_Cursor(0);
+		break;
+		
+		case note_A_7:
+		LCD_Cursor(20);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(3);
+		LCD_WriteData(4);
+		LCD_WriteData(5);
+		LCD_WriteData(6);
+		LCD_WriteData(7); // 29
+		LCD_WriteData(6);
+		LCD_WriteData(5);
+		LCD_WriteData(4);
+		LCD_Cursor(0);
+		break;
+		
+		// ---------------------------------------------------------------------------------- //
+		
+		case note_B_1:
+		LCD_Cursor(31);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_Cursor(0);
+		break;
+		
+		case note_B_2:
+		LCD_Cursor(31);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_Cursor(0);
+		break;
+		
+		case note_B_3:
+		LCD_Cursor(30);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_Cursor(0);
+		break;
+		
+		case note_B_4:
+		LCD_Cursor(29);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(4);
+		LCD_Cursor(0);
+		break;
+		
+		case note_B_5:
+		LCD_Cursor(27);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(4);
+		LCD_WriteData(5); 
+		LCD_Cursor(0);
+		break;
+		
+		case note_B_6:
+		LCD_Cursor(25);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(4);
+		LCD_WriteData(5);
+		LCD_WriteData(6);
+		LCD_Cursor(0);
+		break;
+		
+		case note_B_7:
+		LCD_Cursor(23);
+		LCD_WriteData(1);
+		LCD_WriteData(1);
+		LCD_WriteData(2);
+		LCD_WriteData(2);
+		LCD_WriteData(3);
+		LCD_WriteData(3);
+		LCD_WriteData(4);
+		LCD_WriteData(5);
+		LCD_WriteData(6);
+		LCD_WriteData(7);
+		LCD_Cursor(0);
+		break;
 	}
 	return next_vis;
 }
@@ -1254,7 +2507,7 @@ int LCD_tick(int next_state){
 				}
 			else if(button_enter == 1 && button_left == 0 && button_right == 0 && RXFlag == 0) // Enter
 				{	// User wants to playback what is currently saved on the other ATMEGA
-					next_state = select_record;
+					next_state = select_play;
 				}
 			else
 				{
@@ -1405,9 +2658,14 @@ int LCD_tick(int next_state){
 			{
 				LCD_WriteData(0);		// Using custom char 0
 			}
+			LCD_Cursor(0);
 		break;
 		
 		case visualization:
+			if(button_exit == 1)
+			{
+				VISFlag = 0;
+			}
 			for(int j = 16; j <= 32; j++)
 				{
 					LCD_Cursor(j);
@@ -1428,6 +2686,7 @@ int LCD_tick(int next_state){
 			{
 				LCD_WriteData(0);		// Using custom char 0
 			}
+			LCD_Cursor(0);
 		break;
 		
 		case select_octave:
@@ -1443,7 +2702,8 @@ int LCD_tick(int next_state){
 			break;
 			
 		case select_vis:
-			LCD_DisplayString(1, "in vis");		// TODO
+			LCD_Cursor(0);
+			VISFlag = 1;
 			break;
 	}
 	return next_state;
@@ -1452,7 +2712,7 @@ int LCD_tick(int next_state){
 	{
 		DDRA = 0x00; PORTA = 0xFF; // Configure PORTA as input for the piano keys, initialize to 1s
 		DDRB = 0xFF; PORTB = 0x00; // output speaker and LEDS
-		DDRC = 0xFF; PORTC = 0x00; // LCD data lines (NOT USED OUTSIDE OF LCD)
+		DDRC = 0xFF; PORTC = 0x00; // LCD data lines 
 		DDRD = 0xC3; PORTD = 0x3C; // LCD control lines and menu control input
 
 		LCD_init();	
@@ -1469,8 +2729,9 @@ int LCD_tick(int next_state){
 		LCD_WriteCommand(0x80);
 		LCD_Cursor(1);
 		// Period for the tasks
-		unsigned long int LCD_menu_period = 50;
+		unsigned long int LCD_menu_period = 30;
 		unsigned long int Piano_period = 10;
+		unsigned long int Visualization_period = 20; 
 
 		//Calculating GCD
 		unsigned long int tmpGCD = 10;
@@ -1481,11 +2742,13 @@ int LCD_tick(int next_state){
 		//Recalculate GCD periods for scheduler
 		unsigned long int SMTick1_period = LCD_menu_period;
 		unsigned long int SMTick2_period = Piano_period;
+		unsigned long int SMTick3_period = Visualization_period;
 
 		//Declare an array of tasks
 		static task task1;
 		static task task2;
-		task *tasks[] = {&task1, &task2}; // FIX FOR NUMBER OF SM
+		static task task3; 
+		task *tasks[] = {&task1, &task2, &task3}; // FIX FOR NUMBER OF SM
 		const unsigned short numTasks =  sizeof(tasks)/sizeof(task*);
 		
 		// Task 1
@@ -1499,6 +2762,11 @@ int LCD_tick(int next_state){
 		task2.elapsedTime = SMTick2_period;//Task current elapsed time.
 		task2.TickFct = &piano_tick;//Function pointer for the tick.
 		
+		task3.state = 0;//Task initial state.
+		task3.period = SMTick3_period;//Task Period.
+		task3.elapsedTime = SMTick3_period;//Task current elapsed time.
+		task3.TickFct = &Vis_tick;//Function pointer for the tick.
+		
 		// Set the timer and turn it on
 		TimerSet(GCD);
 		TimerOn();
@@ -1510,7 +2778,9 @@ int LCD_tick(int next_state){
 
 		unsigned short i; // Scheduler for-loop iterator
 		unsigned char tempD; // Global variable set from buttons
+		
 		while(1) {
+			Octave = 0x04;
 			unsigned char tempD = ~PIND & 0x3C;
 			
 			// Global User input definitions
@@ -1556,10 +2826,13 @@ int LCD_tick(int next_state){
 			for ( i = 0; i < numTasks; i++ ) {
 				// Task is ready to tick
 				if ( tasks[i]->elapsedTime >= tasks[i]->period ) {
+					LCD_Cursor(0);
 					// Setting next state for task
 					tasks[i]->state = tasks[i]->TickFct(tasks[i]->state);
+					LCD_Cursor(0);
 					// Reset the elapsed time for next tick.
 					tasks[i]->elapsedTime = 0;
+					LCD_Cursor(0);
 				}
 				tasks[i]->elapsedTime += 1;
 			}
