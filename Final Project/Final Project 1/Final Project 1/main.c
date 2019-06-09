@@ -5,6 +5,7 @@
 #include "io.c"
 #include "timer.h"
 #include "scheduler.h"
+#include "usart.h"
 
 // 0.954 Hz is lowest frequency possible with this function,
 // based on settings in PWM_on()
@@ -19,7 +20,7 @@ void set_PWM(double frequency) {
 		// prevents OCR3A from overflowing, using prescaler 64
 		// 0.954 is smallest frequency that will not result in overflow
 		if (frequency < 0.954) { OCR3A = 0xFFFF; }
-		// prevents OCR0A from underflowing, using prescaler 64					
+		// prevents OCR0A from underflowing, using prescaler 64
 		// 31250 is largest frequency that will not result in underflow
 		else if (frequency > 31250) { OCR3A = 0x0000; }
 		// set OCR3A based on desired frequency
@@ -43,7 +44,7 @@ void PWM_off() {
 	TCCR3B = 0x00;
 }
 
-// ------- FUNCTION TO BUILD CUSTOM CHARACTERS ON THE LCD -------- // 
+// ------- FUNCTION TO BUILD CUSTOM CHARACTERS ON THE LCD -------- //
 void LCD_Custom_Char (unsigned char loc, unsigned char *msg)
 {
 	unsigned char i;
@@ -55,6 +56,13 @@ void LCD_Custom_Char (unsigned char loc, unsigned char *msg)
 	}
 }
 
+// Bit-access function
+unsigned char SetBit(unsigned char x, unsigned char k, unsigned char b) {
+	return (b ? x | (0x01 << k) : x & ~(0x01 << k));
+}
+unsigned char GetBit(unsigned char x, unsigned char k) {
+	return ((x & (0x01 << k)) != 0);
+}
 
 // --------------------------- Piano Octave Definitions -------------------------- //
 // First (Lowest) Octave
@@ -129,24 +137,24 @@ unsigned char five_bars[] = { 0x00, 0x00, 0x00, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F};  
 unsigned char six_bars[] = { 0x00, 0x00, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F};	// 6
 unsigned char seven_bars[] = { 0x00, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F}; // 7
 unsigned char top_bar[] = { 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};	// 8
-	
+
 
 
 // ----------------------------------------------------------------------------------------------------------------------- //
 // ----------------------------------------------- MENU DEFINITIONS ------------------------------------------------------ //
 const unsigned char menu_top[15] = {' ','O','C','T','A','V','E',' ','R','E','C','O','R','D',' '};
-	// ----------------------------- 1   2   3   4   5   6   7   8   9   10  11  12  13  14  15 -------------------------- //
+// ----------------------------- 1   2   3   4   5   6   7   8   9   10  11  12  13  14  15 -------------------------- //
 const unsigned char menu_bot[15] = {' ','P','L','A','Y',' ','V','I','S','U','A','L','I','Z','E'};
-	// ----------------------------- 1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16  --------------------- //
+// ----------------------------- 1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16  --------------------- //
 const unsigned char menu_octave[15] = {' ','1',' ','2',' ','3',' ','4',' ','5',' ','6',' ','7',' '};
-	// -------------------------------- 1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16 ------------------- //
-	
+// -------------------------------- 1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16 ------------------- //
+
 unsigned char button_left = 0x00;	// to record if the user wants to go left on the menu
 unsigned char button_right = 0x00;	// to record if the user wants to go right on the menu ( only left and right are valid directions)
 unsigned char button_enter = 0x00;	// If the user selects enter at a given location in the menu
 unsigned char button_exit = 0x00;	// If the user wishes to go back in the nested menu
-unsigned char force_exit = 0x00;
-unsigned char force_pexit = 0x00;
+unsigned char force_exit = 0x00;	// Handshake variable for leaving menu
+unsigned char force_pexit = 0x00;	// Handshake variable for leaving menu
 
 unsigned char RXFlag = 0;	// record flag to prevent other actions
 unsigned char OCTFlag = 0;  // octave flag to prevent other actions
@@ -166,14 +174,15 @@ enum LCD_MENU{init_menu, change_octave, select_octave, visualization, select_vis
 enum OCT_MENU{init_oct, wait_oflag, oct_1, oct_2, oct_3, oct_4, oct_5, oct_6, oct_7};
 enum REC_MENU{init_rec, wait_rxflag, recording, end_recording};
 enum PLAY_MENU{init_play, wait_pyflag, playback, end_playback};
-enum LCD_VIS{init_vis, wait_flag, note_0, 
+enum REC_BLINK{init_blink, wait_rec, ledon, ledoff};
+enum LCD_VIS{init_vis, wait_flag, note_0,
 	note_C_1, note_C_2, note_C_3, note_C_4, note_C_5, note_C_6, note_C_7,
 	note_D_1, note_D_2, note_D_3, note_D_4, note_D_5, note_D_6, note_D_7,
 	note_E_1, note_E_2, note_E_3, note_E_4, note_E_5, note_E_6, note_E_7,
 	note_F_1, note_F_2, note_F_3, note_F_4, note_F_5, note_F_6, note_F_7,
 	note_G_1, note_G_2, note_G_3, note_G_4, note_G_5, note_G_6, note_G_7,
 	note_A_1, note_A_2, note_A_3, note_A_4, note_A_5, note_A_6, note_A_7,
-	note_B_1, note_B_2, note_B_3, note_B_4, note_B_5, note_B_6, note_B_7};
+note_B_1, note_B_2, note_B_3, note_B_4, note_B_5, note_B_6, note_B_7};
 
 int piano_tick(int next_octave) {
 	
@@ -699,7 +708,7 @@ int piano_tick(int next_octave) {
 		}
 		break;
 	}
-	return next_octave; 
+	return next_octave;
 }
 int LCD_tick(int next_state){
 	unsigned char i = 0;
@@ -710,158 +719,158 @@ int LCD_tick(int next_state){
 		break;
 		
 		case change_octave:
-			if(button_enter == 0 && button_right == 1 && button_left == 0)	// Right
-				{	// User wants to go right on the menu
-					next_state = record;
-				}
-			else if(button_enter == 1 && button_left == 0 && button_right == 0) // Enter
-				{	// User wants to change the octave
-					next_state = select_octave;
-				}
-			else
-				{ 
-					next_state = change_octave;
-				}
+		if(button_enter == 0 && button_right == 1 && button_left == 0)	// Right
+		{	// User wants to go right on the menu
+			next_state = record;
+		}
+		else if(button_enter == 1 && button_left == 0 && button_right == 0) // Enter
+		{	// User wants to change the octave
+			next_state = select_octave;
+		}
+		else
+		{
+			next_state = change_octave;
+		}
 		break;
 
 		case record:
-			
-			if( button_enter == 0 && button_right == 1 && button_left == 0)	// Right
-				{	// User wants to go right on the menu
-					next_state = play;
-				}
-			else if(button_enter == 0 && button_left == 1 && button_right == 0) // Left
-				{	// User wants to go left on the menu
-					next_state = change_octave;
-				}
-			else if(button_enter == 1 && button_left == 0 && button_right == 0) // Enter
-				{	// User wants to record the present notes
-					next_state = select_record;
-				}
-			else
-				{
-					next_state = record;
-				}
+		
+		if( button_enter == 0 && button_right == 1 && button_left == 0)	// Right
+		{	// User wants to go right on the menu
+			next_state = play;
+		}
+		else if(button_enter == 0 && button_left == 1 && button_right == 0) // Left
+		{	// User wants to go left on the menu
+			next_state = change_octave;
+		}
+		else if(button_enter == 1 && button_left == 0 && button_right == 0) // Enter
+		{	// User wants to record the present notes
+			next_state = select_record;
+		}
+		else
+		{
+			next_state = record;
+		}
 		break;
 		
 		case play:
-			if( button_enter == 0 && button_right == 1 && button_left == 0)	// Right
-				{	// User wants to go right on the menu
-					next_state = visualization;
-				}
-			else if(button_enter == 0 && button_left == 1 && button_right == 0) // Left
-				{	// User wants to go left on the menu
-					next_state = record;
-				}
-			else if(button_enter == 1 && button_left == 0 && button_right == 0) // Enter
-				{	// User wants to playback what is currently saved
-					next_state = select_play;
-				}
-			else
-				{
-					next_state = play;
-				}
+		if( button_enter == 0 && button_right == 1 && button_left == 0)	// Right
+		{	// User wants to go right on the menu
+			next_state = visualization;
+		}
+		else if(button_enter == 0 && button_left == 1 && button_right == 0) // Left
+		{	// User wants to go left on the menu
+			next_state = record;
+		}
+		else if(button_enter == 1 && button_left == 0 && button_right == 0) // Enter
+		{	// User wants to playback what is currently saved
+			next_state = select_play;
+		}
+		else
+		{
+			next_state = play;
+		}
 		break;
 		
 		case visualization:
-			if(button_enter == 0 && button_left == 1 && button_right == 0) // Left
-				{	// User wants to go left on the menu
-					next_state = play;
-				}
-			else if(button_enter == 1 && button_left == 0 && button_right == 0 && RXFlag == 0) // Enter
-				{	// User wants to display the visualizer
-					next_state = select_vis;
-				}
-			else
-				{ 
-					next_state = visualization;
-				}
+		if(button_enter == 0 && button_left == 1 && button_right == 0) // Left
+		{	// User wants to go left on the menu
+			next_state = play;
+		}
+		else if(button_enter == 1 && button_left == 0 && button_right == 0 && RXFlag == 0) // Enter
+		{	// User wants to display the visualizer
+			next_state = select_vis;
+		}
+		else
+		{
+			next_state = visualization;
+		}
 		break;
 		
 		case select_octave:
-			if(button_exit == 1)	// exit
-			{	// User wants to exit the octave state
-				next_state = change_octave;
-			}
-			else
-			{
-				next_state = select_octave;
-			}
-			break;
+		if(button_exit == 1)	// exit
+		{	// User wants to exit the octave state
+			next_state = change_octave;
+		}
+		else
+		{
+			next_state = select_octave;
+		}
+		break;
 
 		case select_record:
-			if(RXExit == 1)	// exit
-			{	// The recording period has ended
-				next_state = record;
-			}
-			else
-			{
-				next_state = select_record;
-			}
-			break;
-			
+		if(RXExit == 1)	// exit
+		{	// The recording period has ended
+			next_state = record;
+		}
+		else
+		{
+			next_state = select_record;
+		}
+		break;
+		
 		case select_play:
-			if(PYExit == 1)	// exit
-			{	// The playback period has ended
-				next_state = play;
-			}
-			else
-			{
-				next_state = select_play;
-			}
-			break;
-			
+		if(PYExit == 1)	// exit
+		{	// The playback period has ended
+			next_state = play;
+		}
+		else
+		{
+			next_state = select_play;
+		}
+		break;
+		
 		case select_vis:
-			if(button_exit == 1)	// exit
-			{	// User wants to exit the octave state
-				next_state = visualization;
-			}
-			else
-			{
-				next_state = select_vis;
-			}
-			break;
+		if(button_exit == 1)	// exit
+		{	// User wants to exit the octave state
+			next_state = visualization;
+		}
+		else
+		{
+			next_state = select_vis;
+		}
+		break;
 	}
 	
 	switch(next_state){ // STATE MACHINE ACTIONS
 		
 		case init_menu:
-			for(int j = 1; j <= 16; j++)
-			{
-				LCD_Cursor(j);
-				LCD_WriteData(menu_top[j-1]);
-			}
-			
-			LCD_Cursor(16);
-			LCD_WriteData(' ');		// Displays the top menu
+		for(int j = 1; j <= 16; j++)
+		{
+			LCD_Cursor(j);
+			LCD_WriteData(menu_top[j-1]);
+		}
+		
+		LCD_Cursor(16);
+		LCD_WriteData(' ');		// Displays the top menu
 		break;
 		
 		case change_octave:
-			if(button_exit == 1)
-				{
-					OCTFlag = 0;
-				}
-			for(int j = 16; j <= 32; j++)
-				{
-					LCD_Cursor(j);
-					LCD_WriteData(' ');
-				}
-				
-			for(int j = 1; j <= 16; j++)
-				{
-					LCD_Cursor(j);
-					LCD_WriteData(menu_top[j-1]);
-				}
-				
-				LCD_Cursor(16);
-				LCD_WriteData(' ');
-					
-				LCD_Cursor(18);
-				for(i=0;i<6;i++)		// This shows the user that he or she is selected change octave
-					{
-						LCD_WriteData(0);		// Using custom char 0
-					}
-				LCD_Cursor(0);		
+		if(button_exit == 1)
+		{
+			OCTFlag = 0;
+		}
+		for(int j = 16; j <= 32; j++)
+		{
+			LCD_Cursor(j);
+			LCD_WriteData(' ');
+		}
+		
+		for(int j = 1; j <= 16; j++)
+		{
+			LCD_Cursor(j);
+			LCD_WriteData(menu_top[j-1]);
+		}
+		
+		LCD_Cursor(16);
+		LCD_WriteData(' ');
+		
+		LCD_Cursor(18);
+		for(i=0;i<6;i++)		// This shows the user that he or she is selected change octave
+		{
+			LCD_WriteData(0);		// Using custom char 0
+		}
+		LCD_Cursor(0);
 		break;
 
 		case record:
@@ -871,29 +880,29 @@ int LCD_tick(int next_state){
 			force_exit = 0; // THIS MAY NOT GO HERE
 			RXExit = 0;
 		}
-			for(int j = 16; j <= 32; j++)
-				{
-					LCD_Cursor(j);
-					LCD_WriteData(' ');
-				}
-				
-			for(int j = 1; j <= 16; j++)
-			{
-				LCD_Cursor(j);
-				LCD_WriteData(menu_top[j-1]);
-			}
-			
-			LCD_Cursor(16);
+		for(int j = 16; j <= 32; j++)
+		{
+			LCD_Cursor(j);
 			LCD_WriteData(' ');
+		}
+		
+		for(int j = 1; j <= 16; j++)
+		{
+			LCD_Cursor(j);
+			LCD_WriteData(menu_top[j-1]);
+		}
+		
+		LCD_Cursor(16);
+		LCD_WriteData(' ');
 
-				
-			LCD_Cursor(25);
-			for(i=0;i<6;i++)		// This shows the user that he or she is selected change octave
-			{
-				LCD_WriteData(0);		// Using custom char 0
-			}
-				LCD_Cursor(0);
-			break;
+		
+		LCD_Cursor(25);
+		for(i=0;i<6;i++)		// This shows the user that he or she is selected change octave
+		{
+			LCD_WriteData(0);		// Using custom char 0
+		}
+		LCD_Cursor(0);
+		break;
 		
 		case play:
 		if(PYExit == 1)
@@ -903,77 +912,77 @@ int LCD_tick(int next_state){
 			PYExit = 0;
 			over_ride = 0;
 		}
-			for(int j = 16; j <= 32; j++)
-				{
-					LCD_Cursor(j);
-					LCD_WriteData(' ');
-				}
-				
-			for(int j = 1; j <= 16; j++)
-			{
-				LCD_Cursor(j);
-				LCD_WriteData(menu_bot[j-1]);
-			}
-			LCD_Cursor(16);
+		for(int j = 16; j <= 32; j++)
+		{
+			LCD_Cursor(j);
 			LCD_WriteData(' ');
-			
-			LCD_Cursor(18);
-	
-			for(i=0;i<4;i++)		// This shows the user that he or she is selected change octave
-			{
-				LCD_WriteData(0);		// Using custom char 0
-			}
-			LCD_Cursor(0);
+		}
+		
+		for(int j = 1; j <= 16; j++)
+		{
+			LCD_Cursor(j);
+			LCD_WriteData(menu_bot[j-1]);
+		}
+		LCD_Cursor(16);
+		LCD_WriteData(' ');
+		
+		LCD_Cursor(18);
+		
+		for(i=0;i<4;i++)		// This shows the user that he or she is selected change octave
+		{
+			LCD_WriteData(0);		// Using custom char 0
+		}
+		LCD_Cursor(0);
 		break;
 		
 		case visualization:
-			if(button_exit == 1)
-			{
-				VISFlag = 0;
-			}
-			for(int j = 16; j <= 32; j++)
-				{
-					LCD_Cursor(j);
-					LCD_WriteData(' ');
-				}
-				
-			for(int j = 1; j <= 16; j++)
-			{
-				LCD_Cursor(j);
-				LCD_WriteData(menu_bot[j-1]);
-			}
-			LCD_Cursor(16);
+		if(button_exit == 1)
+		{
+			VISFlag = 0;
+		}
+		for(int j = 16; j <= 32; j++)
+		{
+			LCD_Cursor(j);
 			LCD_WriteData(' ');
-			
-			LCD_Cursor(23);
-			
-			for(i=0;i<9;i++)		// This shows the user that he or she is selected change octave
-			{
-				LCD_WriteData(0);		// Using custom char 0
-			}
-			LCD_Cursor(0);
+		}
+		
+		for(int j = 1; j <= 16; j++)
+		{
+			LCD_Cursor(j);
+			LCD_WriteData(menu_bot[j-1]);
+		}
+		LCD_Cursor(16);
+		LCD_WriteData(' ');
+		
+		LCD_Cursor(23);
+		
+		for(i=0;i<9;i++)		// This shows the user that he or she is selected change octave
+		{
+			LCD_WriteData(0);		// Using custom char 0
+		}
+		LCD_Cursor(0);
 		break;
 		
 		case select_octave:
-			LCD_Cursor(0);
-			OCTFlag = 1;
-			break;
+		LCD_Cursor(0);
+		OCTFlag = 1;
+		break;
 
 		case select_record:
-			LCD_Cursor(0);
-			RXFlag = 1;
-			break;
-			
+		LCD_Cursor(0);
+		RXFlag = 1;
+		break;
+		
 		case select_play:
-			LCD_Cursor(0);
-			over_ride = 1;
-			PYFlag = 1;
-			break;
-			
+		LCD_Cursor(0);
+		over_ride = 1;
+		PYFlag = 1;
+		break;
+		
 		case select_vis:
-			LCD_Cursor(0);
-			VISFlag = 1;
-			break;
+		LCD_Cursor(0);
+		VISFlag = 1;
+		break;
 	}
 	return next_state;
 }
@@ -2738,18 +2747,18 @@ int Oct_tick(int next_oct)
 	switch(next_oct)	// State Transtions
 	{
 		case init_oct:
-			next_oct = wait_oflag; 
+		next_oct = wait_oflag;
 		break;
 		
 		case wait_oflag:
-			if(OCTFlag == 1)
-				{
-					next_oct = oct_1; 
-				}
-			else
-				{
-					next_oct = wait_oflag; 
-				}
+		if(OCTFlag == 1)
+		{
+			next_oct = oct_1;
+		}
+		else
+		{
+			next_oct = wait_oflag;
+		}
 		break;
 		
 		case oct_1:
@@ -2772,20 +2781,20 @@ int Oct_tick(int next_oct)
 		
 		case oct_2:
 		if(OCTFlag == 1)
-			{
-				if( button_enter == 0 && button_right == 1 && button_left == 0)	// Right
-				{	// User wants to go right on the menu
-					next_oct = oct_3;
-				}
-				else if(button_enter == 0 && button_left == 1 && button_right == 0) // Left
-				{	// User wants to go left on the menu
-					next_oct = oct_1;
-				}
-				else
-				{
-					next_oct = oct_2;
-				}
+		{
+			if( button_enter == 0 && button_right == 1 && button_left == 0)	// Right
+			{	// User wants to go right on the menu
+				next_oct = oct_3;
 			}
+			else if(button_enter == 0 && button_left == 1 && button_right == 0) // Left
+			{	// User wants to go left on the menu
+				next_oct = oct_1;
+			}
+			else
+			{
+				next_oct = oct_2;
+			}
+		}
 		else
 		{
 			next_oct = wait_oflag;
@@ -2838,23 +2847,23 @@ int Oct_tick(int next_oct)
 		
 		case oct_5:
 		if(OCTFlag == 1)
-			{
-				if( button_enter == 0 && button_right == 1 && button_left == 0)	// Right
-				{	// User wants to go right on the menu
-					next_oct = oct_6;
-				}
-				else if(button_enter == 0 && button_left == 1 && button_right == 0) // Left
-				{	// User wants to go left on the menu
-					next_oct = oct_4;
-				}
-				else
-				{
-					next_oct = oct_5;
-				}
+		{
+			if( button_enter == 0 && button_right == 1 && button_left == 0)	// Right
+			{	// User wants to go right on the menu
+				next_oct = oct_6;
 			}
+			else if(button_enter == 0 && button_left == 1 && button_right == 0) // Left
+			{	// User wants to go left on the menu
+				next_oct = oct_4;
+			}
+			else
+			{
+				next_oct = oct_5;
+			}
+		}
 		else
 		{
-			next_oct = wait_oflag; 
+			next_oct = wait_oflag;
 		}
 		break;
 		
@@ -2954,13 +2963,13 @@ int Oct_tick(int next_oct)
 		
 		case oct_3:
 		for(int j = 16; j <= 32; j++)
-			{
-				LCD_Cursor(j);
-				LCD_WriteData(' ');
-			}
+		{
+			LCD_Cursor(j);
+			LCD_WriteData(' ');
+		}
 		LCD_Cursor(22);
 		LCD_WriteData(0);
-	
+		
 		LCD_Cursor(0);
 		if(button_enter == 1)
 		{
@@ -2970,10 +2979,10 @@ int Oct_tick(int next_oct)
 		
 		case oct_4:
 		for(int j = 16; j <= 32; j++)
-			{
-				LCD_Cursor(j);
-				LCD_WriteData(' ');
-			}
+		{
+			LCD_Cursor(j);
+			LCD_WriteData(' ');
+		}
 		LCD_Cursor(24);
 		LCD_WriteData(0);
 		
@@ -2989,7 +2998,7 @@ int Oct_tick(int next_oct)
 		{
 			LCD_Cursor(j);
 			LCD_WriteData(' ');
-		}		
+		}
 		LCD_Cursor(26);
 		LCD_WriteData(0);
 		
@@ -3002,10 +3011,10 @@ int Oct_tick(int next_oct)
 		
 		case oct_6:
 		for(int j = 16; j <= 32; j++)
-			{
-				LCD_Cursor(j);
-				LCD_WriteData(' ');
-			}
+		{
+			LCD_Cursor(j);
+			LCD_WriteData(' ');
+		}
 		LCD_Cursor(28);
 		LCD_WriteData(0);
 		
@@ -3018,10 +3027,10 @@ int Oct_tick(int next_oct)
 		
 		case oct_7:
 		for(int j = 16; j <= 32; j++)
-			{
-				LCD_Cursor(j);
-				LCD_WriteData(' ');
-			}
+		{
+			LCD_Cursor(j);
+			LCD_WriteData(' ');
+		}
 		LCD_Cursor(30);
 		LCD_WriteData(0);
 		
@@ -3048,9 +3057,9 @@ int Rec_tick(int next_rec)
 		
 		case wait_rxflag:	// wait for the flag to be set
 		if(RXFlag == 1 && RXExit == 0)
-			{
-				next_rec = recording;
-			}
+		{
+			next_rec = recording;
+		}
 		else
 		{
 			next_rec = wait_rxflag;
@@ -3060,17 +3069,17 @@ int Rec_tick(int next_rec)
 		case recording:
 		
 		if (force_exit == 1) // This is the max amount an ATmega can store
-			{
-				next_rec = end_recording;
-			}
-		else 
-			{
-				next_rec = recording;
-			}
+		{
+			next_rec = end_recording;
+		}
+		else
+		{
+			next_rec = recording;
+		}
 		break;
 		
 		case end_recording:
-			next_rec = wait_rxflag;
+		next_rec = wait_rxflag;
 		break;
 		
 		default:
@@ -3089,7 +3098,7 @@ int Rec_tick(int next_rec)
 		case recording:
 		if(address_val == 0)
 		{
-			LCD_DisplayString(1, "RECORDING");	
+			LCD_DisplayString(1, "RECORDING");
 		}
 
 		if (address_val < 80) // This is the max amount an ATmega can store
@@ -3125,9 +3134,9 @@ int Play_tick(int next_play)
 		
 		case wait_pyflag:	// wait for the flag to be set
 		if(PYFlag == 1 && PYExit == 0)
-			{
-				next_play = playback;
-			}
+		{
+			next_play = playback;
+		}
 		else
 		{
 			next_play = wait_pyflag;
@@ -3146,7 +3155,7 @@ int Play_tick(int next_play)
 		break;
 		
 		case end_playback:
-			next_play = wait_pyflag;
+		next_play = wait_pyflag;
 		break;
 		
 		default:
@@ -3189,172 +3198,247 @@ int Play_tick(int next_play)
 	}
 	return next_play;
 }
-	int main(void)
+int Blink_tick(int next_blink)
+{
+	static unsigned tempb = 0x00;
+	switch(next_blink)
 	{
-		DDRA = 0x00; PORTA = 0xFF; // Configure PORTA as input for the piano keys, initialize to 1s
-		DDRB = 0xFF; PORTB = 0x00; // output speaker and LEDS
-		DDRC = 0xFF; PORTC = 0x00; // LCD data lines 
-		DDRD = 0xC3; PORTD = 0x3C; // LCD control lines and menu control input
-
-		LCD_init();	
+		case init_blink:
+		next_blink = wait_rec;
+		break;
 		
-		LCD_Custom_Char(0, top_bar);	/*  Menu select custom character  */
-		LCD_Custom_Char(1, one_bar);	/* Visualization custom character */
-		LCD_Custom_Char(2, two_bars);	/* Visualization custom character */
-		LCD_Custom_Char(3, three_bars); /* Visualization custom character */
-		LCD_Custom_Char(4, four_bars);  /* Visualization custom character */
-		LCD_Custom_Char(5, five_bars);  /* Visualization custom character */
-		LCD_Custom_Char(6, six_bars);	/* Visualization custom character */
-		LCD_Custom_Char(7, seven_bars); /* Visualization custom character */
-			
-		LCD_WriteCommand(0x80);
-		LCD_Cursor(1);
-		// Period for the tasks
-		unsigned long int LCD_menu_period = 20;
-		unsigned long int Piano_period = 10;
-		unsigned long int Visualization_period = 5;
-		unsigned long int Octave_menu_period = 10;
-		unsigned long int Recording_period = 10;
-		unsigned long int Playback_period = 10;
-
-		//Calculating GCD
-		unsigned long int tmpGCD = 5;
-
-		//Greatest common divisor for all tasks or smallest time unit for tasks.
-		unsigned long int GCD = tmpGCD;
-
-		//Recalculate GCD periods for scheduler
-		unsigned long int SMTick1_period = LCD_menu_period;
-		unsigned long int SMTick2_period = Piano_period;
-		unsigned long int SMTick3_period = Visualization_period;
-		unsigned long int SMTick4_period = Octave_menu_period;
-		unsigned long int SMTick5_period = Recording_period;
-		unsigned long int SMTick6_period = Playback_period; 
-
-		//Declare an array of tasks
-		static task task1;
-		static task task2;
-		static task task3; 
-		static task task4;
-		static task task5;
-		static task task6;
-		task *tasks[] = {&task1, &task2, &task3, &task4, &task5, &task6}; 
-		const unsigned short numTasks =  sizeof(tasks)/sizeof(task*);
-		
-		// Task 1
-		task1.state = 0;//Task initial state.
-		task1.period = SMTick1_period;//Task Period.
-		task1.elapsedTime = SMTick1_period;//Task current elapsed time.
-		task1.TickFct = &LCD_tick;//Function pointer for the tick.
-		
-		// Task 2
-		task2.state = 0;//Task initial state.
-		task2.period = SMTick2_period;//Task Period.
-		task2.elapsedTime = SMTick2_period;//Task current elapsed time.
-		task2.TickFct = &piano_tick;//Function pointer for the tick.
-		
-		// Task 3
-		task3.state = 0;//Task initial state.
-		task3.period = SMTick3_period;//Task Period.
-		task3.elapsedTime = SMTick3_period;//Task current elapsed time.
-		task3.TickFct = &Vis_tick;//Function pointer for the tick.
-		
-		// Task 4
-		task4.state = 0;//Task initial state.
-		task4.period = SMTick4_period;//Task Period.
-		task4.elapsedTime = SMTick4_period;//Task current elapsed time.
-		task4.TickFct = &Oct_tick;//Function pointer for the tick.
-		
-		// Task 5
-		task5.state = 0;//Task initial state.
-		task5.period = SMTick5_period;//Task Period.
-		task5.elapsedTime = SMTick5_period;//Task current elapsed time.
-		task5.TickFct = &Rec_tick;//Function pointer for the tick.
-		
-		// Task 6
-		task6.state = 0;//Task initial state.
-		task6.period = SMTick6_period;//Task Period.
-		task6.elapsedTime = SMTick6_period;//Task current elapsed time.
-		task6.TickFct = &Play_tick;//Function pointer for the tick.
-		
-		// Set the timer and turn it on
-		TimerSet(GCD);
-		TimerOn();
-		
-		// Initializes the LCD display
-		// Starting at position 1 on the LCD screen, writes Hello World
-		LCD_ClearScreen();
-		PWM_on();
-
-		unsigned short i; // Scheduler for-loop iterator
-		unsigned char tempD; // Global variable set from buttons
-		
-		while(1) {	// LETS GET IT
-			unsigned char tempD = ~PIND & 0x3C;
-			
-			// Global User input definitions
-			if(tempD == 0x04)
-				{
-					button_exit = 0;
-					button_enter = 0; 
-					button_left = 0; 
-					button_right = 1;
-				}
-			else if(tempD == 0x08)
-				{
-					button_exit = 0;
-					button_enter = 0;
-					button_left = 1;
-					button_right = 0;
-				}
-			else if(tempD == 0x10)
-				{
-					button_exit = 0;
-					button_enter = 1;
-					button_left = 0;
-					button_right = 0;
-				}
-			else if(tempD == 0x20)
-				{
-					button_exit = 1;
-					button_enter = 0;
-					button_left = 0;
-					button_right = 0;
-				}
-			else 
-				{
-					button_exit = 0;
-					button_enter = 0;
-					button_left = 0;
-					button_right = 0;
-				}
-				
-			// ----------------------------------------------------------------------//
-			
-			// Scheduler code
-			for ( i = 0; i < numTasks; i++ ) {
-				// Task is ready to tick
-				if ( tasks[i]->elapsedTime >= tasks[i]->period ) {
-					LCD_Cursor(0);
-					// Setting next state for task
-					tasks[i]->state = tasks[i]->TickFct(tasks[i]->state);
-					LCD_Cursor(0);
-					// Reset the elapsed time for next tick.
-					tasks[i]->elapsedTime = 0;
-					LCD_Cursor(0);
-				}
-				tasks[i]->elapsedTime += 1;
-			}
-			if(over_ride == 1)
-			{
-				set_PWM(override_note);
-			}
-			else
-			{
-				set_PWM(note);
-			}
-			while(!TimerFlag);
-			TimerFlag = 0;
+		case wait_rec:
+		if(RXFlag == 1 && RXExit == 0)
+		{
+			next_blink = ledon;
 		}
-		return 0;
+		else
+		{
+			next_blink = ledoff;
+		}
+		break;
+		
+		case ledon:
+		if (force_exit == 1) // This is the max amount an ATmega can store
+		{
+			next_blink = wait_rec;
+		}
+		else
+		{
+			next_blink = ledoff;
+		}
+		break;
+		
+		case ledoff:
+		if (force_exit == 1) // This is the max amount an ATmega can store
+		{
+			next_blink = wait_rec;
+		}
+		else
+		{
+			next_blink = ledon;
+		}
+		break;
+		
+		default:
+		break;
 	}
+	
+	switch(next_blink)
+	{
+		case init_blink:
+		tempb = 0x00; 
+		break;
+		
+		case wait_rec:
+		tempb = 0x00;
+		break;
+		
+		case ledon:
+		tempb = 0x01;
+		break;
+		
+		case ledoff:
+		tempb = 0x00;
+		break;
+		
+		default:
+		tempb = 0x00;
+		break;
+}
+
+int main(void)
+{
+	DDRA = 0x00; PORTA = 0xFF; // Configure PORTA as input for the piano keys, initialize to 1s
+	DDRB = 0xFF; PORTB = 0x00; // output speaker and LEDS
+	DDRC = 0xFF; PORTC = 0x00; // LCD data lines
+	DDRD = 0xC3; PORTD = 0x3C; // LCD control lines and menu control input
+
+	LCD_init();
+	initUSART(0);
+	
+	LCD_Custom_Char(0, top_bar);	/*  Menu select custom character  */
+	LCD_Custom_Char(1, one_bar);	/* Visualization custom character */
+	LCD_Custom_Char(2, two_bars);	/* Visualization custom character */
+	LCD_Custom_Char(3, three_bars); /* Visualization custom character */
+	LCD_Custom_Char(4, four_bars);  /* Visualization custom character */
+	LCD_Custom_Char(5, five_bars);  /* Visualization custom character */
+	LCD_Custom_Char(6, six_bars);	/* Visualization custom character */
+	LCD_Custom_Char(7, seven_bars); /* Visualization custom character */
+	
+	LCD_WriteCommand(0x80);
+	LCD_Cursor(1);
+	// Period for the tasks
+	unsigned long int LCD_menu_period = 20;
+	unsigned long int Piano_period = 10;
+	unsigned long int Visualization_period = 5;
+	unsigned long int Octave_menu_period = 10;
+	unsigned long int Recording_period = 10;
+	unsigned long int Playback_period = 10;
+
+	//Calculating GCD
+	unsigned long int tmpGCD = 5;
+
+	//Greatest common divisor for all tasks or smallest time unit for tasks.
+	unsigned long int GCD = tmpGCD;
+
+	//Recalculate GCD periods for scheduler
+	unsigned long int SMTick1_period = LCD_menu_period;
+	unsigned long int SMTick2_period = Piano_period;
+	unsigned long int SMTick3_period = Visualization_period;
+	unsigned long int SMTick4_period = Octave_menu_period;
+	unsigned long int SMTick5_period = Recording_period;
+	unsigned long int SMTick6_period = Playback_period;
+
+	//Declare an array of tasks
+	static task task1;
+	static task task2;
+	static task task3;
+	static task task4;
+	static task task5;
+	static task task6;
+	task *tasks[] = {&task1, &task2, &task3, &task4, &task5, &task6};
+	const unsigned short numTasks =  sizeof(tasks)/sizeof(task*);
+	
+	// Task 1
+	task1.state = 0;//Task initial state.
+	task1.period = SMTick1_period;//Task Period.
+	task1.elapsedTime = SMTick1_period;//Task current elapsed time.
+	task1.TickFct = &LCD_tick;//Function pointer for the tick.
+	
+	// Task 2
+	task2.state = 0;//Task initial state.
+	task2.period = SMTick2_period;//Task Period.
+	task2.elapsedTime = SMTick2_period;//Task current elapsed time.
+	task2.TickFct = &piano_tick;//Function pointer for the tick.
+	
+	// Task 3
+	task3.state = 0;//Task initial state.
+	task3.period = SMTick3_period;//Task Period.
+	task3.elapsedTime = SMTick3_period;//Task current elapsed time.
+	task3.TickFct = &Vis_tick;//Function pointer for the tick.
+	
+	// Task 4
+	task4.state = 0;//Task initial state.
+	task4.period = SMTick4_period;//Task Period.
+	task4.elapsedTime = SMTick4_period;//Task current elapsed time.
+	task4.TickFct = &Oct_tick;//Function pointer for the tick.
+	
+	// Task 5
+	task5.state = 0;//Task initial state.
+	task5.period = SMTick5_period;//Task Period.
+	task5.elapsedTime = SMTick5_period;//Task current elapsed time.
+	task5.TickFct = &Rec_tick;//Function pointer for the tick.
+	
+	// Task 6
+	task6.state = 0;//Task initial state.
+	task6.period = SMTick6_period;//Task Period.
+	task6.elapsedTime = SMTick6_period;//Task current elapsed time.
+	task6.TickFct = &Play_tick;//Function pointer for the tick.
+	
+	// Set the timer and turn it on
+	TimerSet(GCD);
+	TimerOn();
+	
+	// Initializes the LCD display
+	// Starting at position 1 on the LCD screen, writes Hello World
+	LCD_ClearScreen();
+	PWM_on();
+
+	unsigned short i; // Scheduler for-loop iterator
+	unsigned char tempD; // local variable set from buttons to determine what buttons are being pressed
+	
+	while(1) {	// LETS GET IT
+		unsigned char tempD = ~PIND & 0x3C;
+		
+		// Global User input definitions
+		if(tempD == 0x04)
+		{
+			button_exit = 0;
+			button_enter = 0;
+			button_left = 0;
+			button_right = 1;
+		}
+		else if(tempD == 0x08)
+		{
+			button_exit = 0;
+			button_enter = 0;
+			button_left = 1;
+			button_right = 0;
+		}
+		else if(tempD == 0x10)
+		{
+			button_exit = 0;
+			button_enter = 1;
+			button_left = 0;
+			button_right = 0;
+		}
+		else if(tempD == 0x20)
+		{
+			button_exit = 1;
+			button_enter = 0;
+			button_left = 0;
+			button_right = 0;
+		}
+		else
+		{
+			button_exit = 0;
+			button_enter = 0;
+			button_left = 0;
+			button_right = 0;
+		}
+		
+		if(USART_IsSendReady(0)) // Sends the Octave to another micro controller
+		{
+			USART_Send(Octave, 0);
+		}
+
+		// ----------------------------------------------------------------------//
+		
+		// Scheduler code
+		for ( i = 0; i < numTasks; i++ ) {
+			// Task is ready to tick
+			if ( tasks[i]->elapsedTime >= tasks[i]->period ) {
+				LCD_Cursor(0);
+				// Setting next state for task
+				tasks[i]->state = tasks[i]->TickFct(tasks[i]->state);
+				LCD_Cursor(0);
+				// Reset the elapsed time for next tick.
+				tasks[i]->elapsedTime = 0;
+				LCD_Cursor(0);
+			}
+			tasks[i]->elapsedTime += 1;
+		}
+		if(over_ride == 1)
+		{
+			set_PWM(override_note);
+		}
+		else
+		{
+			set_PWM(note);
+		}
+		while(!TimerFlag);
+		TimerFlag = 0;
+	}
+	return 0;
+}
